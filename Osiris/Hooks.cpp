@@ -210,6 +210,7 @@ static bool STDCALL_CONV createMove(LINUX_ARGS(void* thisptr,) float inputSample
     Misc::quickReload(cmd);
     Misc::fixTabletSignal();
     Misc::slowwalk(cmd);
+    Misc::blockbot(cmd);
 
     EnginePrediction::run(cmd);
 
@@ -351,7 +352,7 @@ static bool STDCALL_CONV shouldDrawFog(LINUX_ARGS(void* thisptr)) noexcept
         return hooks->clientMode.callOriginal<bool, 17>();
     }
 #endif
-    
+
     return !Visuals::shouldRemoveFog();
 }
 
@@ -517,7 +518,7 @@ static bool STDCALL_CONV dispatchUserMessage(LINUX_ARGS(void* thisptr, ) UserMes
         Misc::onVotePass();
     else if (type == UserMessageType::VoteFailed)
         Misc::onVoteFailed();
-    
+
     return hooks->client.callOriginal<bool, 38>(type, passthroughFlags, size, data);
 }
 
@@ -564,7 +565,7 @@ void Hooks::install() noexcept
     *reinterpret_cast<decltype(::swapWindow)**>(memory->swapWindow) = ::swapWindow;
 
 #endif
-    
+
     bspQuery.init(interfaces->engine->getBSPTreeQuery());
     bspQuery.hookAt(6, &listLeavesInBox);
 
@@ -608,7 +609,7 @@ void Hooks::install() noexcept
 
     surface.init(interfaces->surface);
     surface.hookAt(WIN32_LINUX(15, 14), &setDrawColor);
-    
+
     svCheats.init(interfaces->cvar->findVar("sv_cheats"));
     svCheats.hookAt(WIN32_LINUX(13, 16), &svCheatsGetBool);
 

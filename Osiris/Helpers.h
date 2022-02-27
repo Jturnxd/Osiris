@@ -79,6 +79,8 @@ namespace Helpers
         return weaponID == WeaponId::Mp5sd && paintKit == 800;
     }
 
+    Vector calculateRelativeAngle(const Vector& source, const Vector& destination) noexcept;
+
     class RandomGenerator {
     public:
         template <std::integral T>
@@ -111,3 +113,4 @@ namespace Helpers
         return RandomGenerator::random(min, max);
     }
 }
+
