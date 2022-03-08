@@ -107,16 +107,6 @@ public:
     static const auto& getGraffitiKit(const game_items::Item& item) noexcept { return instance().container.getStorage().getGraffitiKit(item); }
     static const auto& getPatchKit(const game_items::Item& item) noexcept { return instance().container.getStorage().getPatchKit(item); }
 
-    [[nodiscard]] std::uint16_t getServiceMedalYear(const game_items::Item& serviceMedal) const noexcept
-    {
-        return container.getStorage().getServiceMedalYear(serviceMedal);
-    }
-
-    [[nodiscard]] bool isCollectibleGenuine(const game_items::Item& collectible) const noexcept
-    {
-        return container.getStorage().isCollectibleGenuine(collectible);
-    }
-
 private:
     StaticDataImpl(const StaticDataImpl&) = delete;
 
@@ -346,6 +336,21 @@ private:
         }
     }
 
+    void computeRarities() noexcept
+    {
+        for (auto& crate : _cases) {
+            for (auto it = _caseLoot.begin() + crate.lootBeginIdx; it != _caseLoot.begin() + crate.lootEndIdx; ++it)
+                crate.rarities.set(it->get().getRarity());
+        }
+    }
+
+    void sortLoot() noexcept
+    {
+        for (const auto& crate : _cases) {
+            std::ranges::sort(_caseLoot.begin() + crate.lootBeginIdx, _caseLoot.begin() + crate.lootEndIdx, {}, [](const game_items::Item& item) { return item.getRarity(); });
+        }
+    }
+
     StaticDataImpl()
     {
         assert(memory && interfaces);
@@ -358,11 +363,13 @@ private:
         initMusicData(itemSchema, storage, converter);
         std::vector<int> lootListIndices;
         initItemData(itemSchema, storage, lootListIndices);
-
+        storage.compress();
         container = game_items::Lookup{ std::move(storage) };
 
         buildLootLists(itemSchema, lootListIndices);
         excludeTournamentStickerCapsulesFromSouvenirPackages();
+        computeRarities();
+        sortLoot();
 
         _cases.shrink_to_fit();
         _caseLoot.shrink_to_fit();
@@ -380,9 +387,24 @@ private:
     return StaticDataImpl::gameItems().size();
 }
 
-const std::vector<std::reference_wrapper<const game_items::Item>>& StaticData::caseLoot() noexcept
+std::span<const std::reference_wrapper<const game_items::Item>> StaticData::getCrateLoot(const StaticData::Case& crate) noexcept
 {
-    return StaticDataImpl::caseLoot();
+    if (!crate.hasLoot())
+        return {};
+
+    return { StaticDataImpl::caseLoot().begin() + crate.lootBeginIdx, StaticDataImpl::caseLoot().begin() + crate.lootEndIdx };
+}
+
+std::span<const std::reference_wrapper<const game_items::Item>> StaticData::getCrateLootOfRarity(const StaticData::Case& crate, EconRarity rarity) noexcept
+{
+    struct Comp {
+        bool operator()(EconRarity rarity, const game_items::Item& item) const noexcept { return rarity < item.getRarity(); }
+        bool operator()(const game_items::Item& item, EconRarity rarity) const noexcept { return item.getRarity() < rarity; }
+    };
+
+    const auto loot = getCrateLoot(crate);
+    const auto [begin, end] = std::equal_range(loot.begin(), loot.end(), rarity, Comp{});
+    return { begin, end };
 }
 
 std::vector<StaticData::ItemIndex2> StaticData::getItemIndices() noexcept
@@ -430,46 +452,39 @@ int StaticData::getSealedGraffitiID(const game_items::Item& item) noexcept
     return StaticDataImpl::getGraffitiKit(item).id;
 }
 
+[[nodiscard]] const game_items::ItemName& getItemName(const game_items::Item& item)
+{
+    const auto& storage = StaticData::lookup().getStorage();
+
+    if (item.isSkin() || item.isGloves())
+        return storage.getPaintKit(item).name;
+    if (item.isMusic())
+        return storage.getMusicKit(item).name;
+    if (item.isSticker())
+        return storage.getStickerKit(item).name;
+    if (item.isGraffiti() || item.isSealedGraffiti())
+        return storage.getGraffitiKit(item).name;
+    if (item.isPatch())
+        return storage.getPatchKit(item).name;
+
+    static constexpr game_items::ItemName fallback{ "", L"" };
+    return fallback;
+}
+
 std::string_view StaticData::getPaintName(const game_items::Item& item) noexcept
 {
-    if (item.isSkin() || item.isGloves())
-        return StaticDataImpl::getPaintKit(item).name.forDisplay;
-    if (item.isMusic())
-        return StaticDataImpl::getMusicKit(item).name.forDisplay;
-    if (item.isSticker())
-        return StaticDataImpl::getStickerKit(item).name.forDisplay;
-    if (item.isGraffiti() || item.isSealedGraffiti())
-        return StaticDataImpl::getGraffitiKit(item).name.forDisplay;
-    if (item.isPatch())
-        return StaticDataImpl::getPatchKit(item).name.forDisplay;
-    return "";
+    return getItemName(item).forDisplay;
 }
 
 std::wstring_view StaticData::getPaintNameUpper(const game_items::Item& item) noexcept
 {
-    if (item.isSkin() || item.isGloves())
-        return StaticDataImpl::getPaintKit(item).name.forSearch;
-    if (item.isMusic())
-        return StaticDataImpl::getMusicKit(item).name.forSearch;
-    if (item.isSticker())
-        return StaticDataImpl::getStickerKit(item).name.forSearch;
-    if (item.isGraffiti() || item.isSealedGraffiti())
-        return StaticDataImpl::getGraffitiKit(item).name.forSearch;
-    if (item.isPatch())
-        return StaticDataImpl::getPatchKit(item).name.forSearch;
-    return L"";
-}
-
-const game_items::PaintKit& StaticData::getPaintKit(const game_items::Item& item) noexcept
-{
-    assert(item.isSkin() || item.isGloves());
-    return StaticDataImpl::getPaintKit(item);
+    return getItemName(item).forSearch;
 }
 
 const StaticData::Case& StaticData::getCase(const game_items::Item& item) noexcept
 {
     assert(item.isCase());
-    return StaticDataImpl::cases()[item.dataIndex];
+    return StaticDataImpl::cases()[item.getDataIndex()];
 }
 
 const game_items::Item& StaticData::getGameItem(ItemIndex2 itemIndex) noexcept
@@ -492,21 +507,6 @@ const game_items::Lookup& StaticData::lookup() noexcept
     return StaticDataImpl::container_();
 }
 
-int StaticData::findSouvenirTournamentSticker(std::uint32_t tournamentID) noexcept
-{
-    return StaticDataImpl::instance().container_().findTournamentEventStickerID(tournamentID);
-}
-
-int StaticData::getTournamentTeamGoldStickerID(std::uint32_t tournamentID, TournamentTeam team) noexcept
-{
-    return StaticDataImpl::instance().container_().findTournamentTeamGoldStickerID(tournamentID, team);
-}
-
-int StaticData::getTournamentPlayerGoldStickerID(std::uint32_t tournamentID, int tournamentPlayerID) noexcept
-{
-    return StaticDataImpl::instance().container_().findTournamentPlayerGoldStickerID(tournamentID, tournamentPlayerID);
-}
-
 int StaticData::getTournamentMapGoldStickerID(TournamentMap map) noexcept
 {
     switch (map) {
@@ -519,22 +519,6 @@ int StaticData::getTournamentMapGoldStickerID(TournamentMap map) noexcept
     case TournamentMap::Vertigo: return 1695;
     default: return 0;
     }
-}
-
-bool StaticData::isCollectibleGenuine(const game_items::Item& collectible) noexcept
-{
-    return StaticDataImpl::instance().isCollectibleGenuine(collectible);
-}
-
-std::uint16_t StaticData::getServiceMedalYear(const game_items::Item& serviceMedal) noexcept
-{
-    return StaticDataImpl::instance().getServiceMedalYear(serviceMedal);
-}
-
-std::uint32_t StaticData::getTournamentEventID(const game_items::Item& item) noexcept
-{
-    assert(item.isSouvenirToken() || item.isViewerPass() || item.isTournamentCoin());
-    return static_cast<std::uint32_t>(item.dataIndex);
 }
 
 game_items::PaintKit::PaintKit(int id, ItemName name, float wearRemapMin, float wearRemapMax) noexcept : id{ id }, wearRemapMin{ wearRemapMin }, wearRemapMax{ wearRemapMax }, name{ name } {}

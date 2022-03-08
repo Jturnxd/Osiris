@@ -1,6 +1,8 @@
 #pragma once
 
+#include <bit>
 #include <cassert>
+#include <cstddef>
 #include <cstdint>
 #include <functional>
 #include <optional>
@@ -8,7 +10,7 @@
 #include <string>
 #include <string_view>
 #include <vector>
-
+#include "../SDK/ItemSchema.h"
 #include "../SDK/WeaponId.h"
 
 enum TournamentTeam : std::uint8_t;
@@ -93,8 +95,48 @@ namespace StaticData
         Vertigo
     };
 
+    class EconRarities {
+    public:
+        EconRarities() = default;
+
+        template <typename... Args>
+        constexpr EconRarities(Args... args) noexcept
+        {
+            (set(args), ...);
+        }
+
+        constexpr void set(EconRarity rarity) noexcept
+        {
+            if (const auto rarityBit = static_cast<std::uint8_t>(rarity); rarityBit < std::numeric_limits<std::uint8_t>::digits)
+                bits |= (std::byte{ 1 } << rarityBit);
+        }
+
+        [[nodiscard]] constexpr EconRarity getNthRarity(std::uint8_t n) const noexcept
+        {
+            for (std::uint8_t i = 0; i < std::numeric_limits<std::uint8_t>::digits; ++i) {
+                if (std::to_integer<std::uint8_t>(bits & (std::byte{ 1 } << i)) != 0) {
+                    if (n == 0)
+                        return static_cast<EconRarity>(i);
+                    --n;
+                }
+            }
+            return EconRarity::Default;
+        }
+
+        [[nodiscard]] constexpr std::size_t count() const noexcept
+        {
+            return static_cast<std::size_t>(std::popcount(std::to_integer<std::uint8_t>(bits)));
+        }
+
+        [[nodiscard]] constexpr bool operator==(const EconRarities&) const = default;
+
+    private:
+        std::byte bits{ 0 };
+    };
+
     struct Case {
         bool willProduceStatTrak = false;
+        EconRarities rarities{};
         TournamentMap tournamentMap = TournamentMap::None;
         std::uint32_t souvenirPackageTournamentID = 0;
         std::size_t lootBeginIdx;
@@ -105,7 +147,8 @@ namespace StaticData
     };
 
     [[nodiscard]] std::size_t getGameItemsCount() noexcept;
-    const std::vector<std::reference_wrapper<const game_items::Item>>& caseLoot() noexcept;
+    [[nodiscard]] std::span<const std::reference_wrapper<const game_items::Item>> getCrateLoot(const Case& crate) noexcept;
+    [[nodiscard]] std::span<const std::reference_wrapper<const game_items::Item>> getCrateLootOfRarity(const Case& crate, EconRarity rarity) noexcept;
     [[nodiscard]] std::vector<ItemIndex2> getItemIndices() noexcept;
     
     [[nodiscard]] int getStickerID(const game_items::Item& item) noexcept;
@@ -117,7 +160,6 @@ namespace StaticData
     
     [[nodiscard]] std::string_view getPaintName(const game_items::Item& item) noexcept;
     [[nodiscard]] std::wstring_view getPaintNameUpper(const game_items::Item& item) noexcept;
-    [[nodiscard]] const game_items::PaintKit& getPaintKit(const game_items::Item& item) noexcept;
     [[nodiscard]] const Case& getCase(const game_items::Item& item) noexcept;
     [[nodiscard]] const game_items::Item& getGameItem(ItemIndex2 itemIndex) noexcept;
 
@@ -126,13 +168,7 @@ namespace StaticData
 
     [[nodiscard]] const game_items::Lookup& lookup() noexcept;
 
-    int findSouvenirTournamentSticker(std::uint32_t tournamentID) noexcept;
-    int getTournamentTeamGoldStickerID(std::uint32_t tournamentID, TournamentTeam team) noexcept;
-    int getTournamentPlayerGoldStickerID(std::uint32_t tournamentID, int tournamentPlayerID) noexcept;
     int getTournamentMapGoldStickerID(TournamentMap map) noexcept;
-    bool isCollectibleGenuine(const game_items::Item& collectible) noexcept;
-    std::uint16_t getServiceMedalYear(const game_items::Item& serviceMedal) noexcept;
-    [[nodiscard]] std::uint32_t getTournamentEventID(const game_items::Item& item) noexcept;
 
     constexpr TournamentMap getTournamentMapOfSouvenirPackage(std::string_view lootListName) noexcept
     {

@@ -9,6 +9,7 @@
 #include "../SDK/EconItemView.h"
 #include "../SDK/Entity.h"
 #include "../SDK/ItemSchema.h"
+#include "GameItems/Lookup.h"
 
 using Inventory::InvalidDynamicDataIdx;
 using Inventory::BASE_ITEMID;
@@ -98,11 +99,11 @@ private:
     {
         assert(inventoryItem.isSkin());
 
-        const auto paintKit = StaticData::getPaintKit(inventoryItem.get()).id;
+        const auto paintKit = StaticData::lookup().getStorage().getPaintKit(inventoryItem.get()).id;
         econItem.setPaintKit(static_cast<float>(paintKit));
 
         const auto& dynamicData = dynamicSkinData[inventoryItem.getDynamicDataIndex()];
-        const auto isMP5LabRats = Helpers::isMP5LabRats(inventoryItem.get().weaponID, paintKit);
+        const auto isMP5LabRats = Helpers::isMP5LabRats(inventoryItem.get().getWeaponID(), paintKit);
         if (dynamicData.isSouvenir() || isMP5LabRats) {
             econItem.quality = 12;
         } else {
@@ -163,9 +164,9 @@ private:
         econItem->inventory = asUnacknowledged ? 0 : baseInvID + inventory.size();
 
         const auto& item = inventoryItem.get();
-        econItem->rarity = static_cast<std::uint16_t>(item.rarity);
+        econItem->rarity = static_cast<std::uint16_t>(item.getRarity());
         econItem->quality = 4;
-        econItem->weaponId = item.weaponID;
+        econItem->weaponId = item.getWeaponID();
 
         if (item.isSticker()) {
             econItem->setStickerID(0, StaticData::getStickerID(item));
@@ -187,13 +188,13 @@ private:
             initSkinEconItem(inventoryItem, *econItem);
         } else if (item.isGloves()) {
             econItem->quality = 3;
-            econItem->setPaintKit(static_cast<float>(StaticData::getPaintKit(item).id));
+            econItem->setPaintKit(static_cast<float>(StaticData::lookup().getStorage().getPaintKit(item).id));
 
             const auto& dynamicData = dynamicGloveData[inventoryItem.getDynamicDataIndex()];
             econItem->setWear(dynamicData.wear);
             econItem->setSeed(static_cast<float>(dynamicData.seed));
         } else if (item.isCollectible()) {
-            if (StaticData::isCollectibleGenuine(item))
+            if (StaticData::lookup().getStorage().isCollectibleGenuine(item))
                 econItem->quality = 1;
         } else if (item.isAgent()) {
             const auto& dynamicData = dynamicAgentData[inventoryItem.getDynamicDataIndex()];

@@ -121,31 +121,31 @@ public:
     const auto& getStickerKit(const Item& item) const
     {
         assert(item.isSticker());
-        return stickerKits[item.dataIndex];
+        return stickerKits[item.getDataIndex()];
     }
 
     const auto& getMusicKit(const Item& item) const
     {
         assert(item.isMusic());
-        return musicKits[item.dataIndex];
+        return musicKits[item.getDataIndex()];
     }
 
     const auto& getPaintKit(const Item& item) const
     {
         assert(item.isSkin() || item.isGloves());
-        return paintKits[item.dataIndex];
+        return paintKits[item.getDataIndex()];
     }
 
     const auto& getGraffitiKit(const Item& item) const
     {
         assert(item.isGraffiti() || item.isSealedGraffiti());
-        return graffitiKits[item.dataIndex];
+        return graffitiKits[item.getDataIndex()];
     }
 
     const auto& getPatchKit(const Item& item) const
     {
         assert(item.isPatch());
-        return patchKits[item.dataIndex];
+        return patchKits[item.getDataIndex()];
     }
 
     auto& getGameItems()
@@ -161,13 +161,29 @@ public:
     [[nodiscard]] std::uint16_t getServiceMedalYear(const Item& serviceMedal) const noexcept
     {
         assert(serviceMedal.isServiceMedal());
-        return static_cast<std::uint16_t>(serviceMedal.dataIndex);
+        return static_cast<std::uint16_t>(serviceMedal.getDataIndex());
     }
 
     [[nodiscard]] bool isCollectibleGenuine(const Item& collectible) const noexcept
     {
         assert(collectible.isCollectible());
-        return static_cast<bool>(collectible.dataIndex);
+        return static_cast<bool>(collectible.getDataIndex());
+    }
+
+    [[nodiscard]] std::uint32_t getTournamentEventID(const Item& item) const noexcept
+    {
+        assert(item.isSouvenirToken() || item.isViewerPass() || item.isTournamentCoin());
+        return static_cast<std::uint32_t>(item.getDataIndex());
+    }
+
+    void compress()
+    {
+        paintKits.shrink_to_fit();
+        stickerKits.shrink_to_fit();
+        musicKits.shrink_to_fit();
+        graffitiKits.shrink_to_fit();
+        patchKits.shrink_to_fit();
+        gameItems.shrink_to_fit();
     }
 
 private:
