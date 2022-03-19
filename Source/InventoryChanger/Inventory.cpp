@@ -21,6 +21,7 @@ static std::vector<DynamicMusicData> dynamicMusicData;
 static std::vector<DynamicSouvenirPackageData> dynamicSouvenirPackageData;
 static std::vector<DynamicServiceMedalData> dynamicServiceMedalData;
 static std::vector<DynamicTournamentCoinData> dynamicTournamentCoinData;
+static std::vector<DynamicGraffitiData> dynamicGraffitiData;
 
 class InventoryImpl {
 public:
@@ -172,8 +173,13 @@ private:
             econItem->setStickerID(0, StaticData::lookup().getStorage().getStickerKit(item).id);
         } else if (item.isPatch()) {
             econItem->setStickerID(0, StaticData::lookup().getStorage().getPatchKit(item).id);
-        } else if (item.isGraffiti() || item.isSealedGraffiti()) {
+        } else if (item.isGraffiti()) {
             econItem->setStickerID(0, StaticData::lookup().getStorage().getGraffitiKit(item).id);
+            const auto& dynamicData = dynamicGraffitiData[inventoryItem.getDynamicDataIndex()];
+            if (dynamicData.usesLeft >= 0) {
+                econItem->weaponId = WeaponId::Graffiti;
+                econItem->setSpraysRemaining(dynamicData.usesLeft);
+            }
         } else if (item.isMusic()) {
             econItem->setMusicID(StaticData::lookup().getStorage().getMusicKit(item).id);
             const auto& dynamicData = dynamicMusicData[inventoryItem.getDynamicDataIndex()];
@@ -379,6 +385,11 @@ DynamicTournamentCoinData& Inventory::dynamicTournamentCoinData(std::size_t inde
     return ::dynamicTournamentCoinData[index];
 }
 
+DynamicGraffitiData& Inventory::dynamicGraffitiData(std::size_t index) noexcept
+{
+    return ::dynamicGraffitiData[index];
+}
+
 std::size_t Inventory::emplaceDynamicData(DynamicSkinData&& data) noexcept
 {
     ::dynamicSkinData.push_back(std::move(data));
@@ -419,6 +430,12 @@ std::size_t Inventory::emplaceDynamicData(DynamicTournamentCoinData&& data) noex
 {
     ::dynamicTournamentCoinData.push_back(std::move(data));
     return ::dynamicTournamentCoinData.size() - 1;
+}
+
+std::size_t Inventory::emplaceDynamicData(DynamicGraffitiData&& data) noexcept
+{
+    ::dynamicGraffitiData.push_back(std::move(data));
+    return ::dynamicGraffitiData.size() - 1;
 }
 
 std::vector<InventoryItem>& Inventory::get() noexcept

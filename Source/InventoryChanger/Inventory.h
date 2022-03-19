@@ -69,6 +69,10 @@ struct DynamicTournamentCoinData {
     std::uint32_t dropsAwarded = 0;
 };
 
+struct DynamicGraffitiData {
+    std::int8_t usesLeft = -1;
+};
+
 struct InventoryItem {
 private:
     std::optional<std::reference_wrapper<const game_items::Item>> item;
@@ -91,7 +95,7 @@ public:
     bool isCollectible() const noexcept { return isValid() && get().isCollectible(); }
     bool isCase() const noexcept { return isValid() && get().isCase(); }
     bool isCaseKey() const noexcept { return isValid() && get().isCaseKey(); }
-    bool isSealedGraffiti() const noexcept { return isValid() && get().isSealedGraffiti(); }
+    bool isGraffiti() const noexcept { return isValid() && get().isGraffiti(); }
     bool isOperationPass() const noexcept { return isValid() && get().isOperationPass(); }
     bool isNameTag() const noexcept { return isValid() && get().isNameTag(); }
     bool isPatch() const noexcept { return isValid() && get().isPatch(); }
@@ -130,6 +134,7 @@ namespace Inventory
     DynamicSouvenirPackageData& dynamicSouvenirPackageData(std::size_t index) noexcept;
     DynamicServiceMedalData& dynamicServiceMedalData(std::size_t index) noexcept;
     DynamicTournamentCoinData& dynamicTournamentCoinData(std::size_t index) noexcept;
+    DynamicGraffitiData& dynamicGraffitiData(std::size_t index) noexcept;
 
     std::size_t emplaceDynamicData(DynamicSkinData&& data) noexcept;
     std::size_t emplaceDynamicData(DynamicGloveData&& data) noexcept;
@@ -138,4 +143,5 @@ namespace Inventory
     std::size_t emplaceDynamicData(DynamicSouvenirPackageData&& data) noexcept;
     std::size_t emplaceDynamicData(DynamicServiceMedalData&& data) noexcept;
     std::size_t emplaceDynamicData(DynamicTournamentCoinData&& data) noexcept;
+    std::size_t emplaceDynamicData(DynamicGraffitiData&& data) noexcept;
 }

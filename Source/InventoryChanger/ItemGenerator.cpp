@@ -526,16 +526,277 @@ constexpr auto spectrumKnives = std::to_array<RareSpecialItem>({
     { WeaponId::Daggers, 414 }, // Rust Coat
 });
 
+constexpr auto gloveCaseGloves = std::to_array<RareSpecialItem>({
+    { WeaponId::GloveStuddedBloodhound, 10007 }, // Snakebite
+    { WeaponId::GloveStuddedBloodhound, 10008 }, // Bronzed
+    { WeaponId::GloveStuddedBloodhound, 10006 }, // Charred
+    { WeaponId::GloveStuddedBloodhound, 10039 }, // Guerrilla
+
+    { WeaponId::GloveSlick, 10016 }, // Crimson Weave
+    { WeaponId::GloveSlick, 10015 }, // Convoy
+    { WeaponId::GloveSlick, 10013 }, // Lunar Weave
+    { WeaponId::GloveSlick, 10040 }, // Diamondback
+
+    { WeaponId::GloveLeatherWrap, 10021 }, // Slaughter
+    { WeaponId::GloveLeatherWrap, 10009 }, // Leather
+    { WeaponId::GloveLeatherWrap, 10036 }, // Badlands
+    { WeaponId::GloveLeatherWrap, 10010 }, // Spruce DDPAT
+
+    { WeaponId::GloveMotorcycle, 10026 }, // Spearmint
+    { WeaponId::GloveMotorcycle, 10028 }, // Cool Mint
+    { WeaponId::GloveMotorcycle, 10027 }, // Boom!
+    { WeaponId::GloveMotorcycle, 10024 }, // Eclipse
+
+    { WeaponId::GloveSpecialist, 10033 }, // Crimson Kimono
+    { WeaponId::GloveSpecialist, 10034 }, // Emerald Web
+    { WeaponId::GloveSpecialist, 10035 }, // Foundation
+    { WeaponId::GloveSpecialist, 10030 }, // Forest DDPAT
+
+    { WeaponId::GloveSporty, 10037 }, // Pandora's Box
+    { WeaponId::GloveSporty, 10038 }, // Hedge Maze
+    { WeaponId::GloveSporty, 10018 }, // Superconductor
+    { WeaponId::GloveSporty, 10019 }, // Arid
+});
+
+constexpr auto gammaKnives = std::to_array<RareSpecialItem>({
+    { WeaponId::Bayonet, 568 }, // Gamma Doppler Emerald
+    { WeaponId::Bayonet, 569 }, // Gamma Doppler Phase 1
+    { WeaponId::Bayonet, 570 }, // Gamma Doppler Phase 2
+    { WeaponId::Bayonet, 571 }, // Gamma Doppler Phase 3
+    { WeaponId::Bayonet, 572 }, // Gamma Doppler Phase 4
+    { WeaponId::Bayonet, 558 }, // Lore
+    { WeaponId::Bayonet, 573 }, // Autotronic
+    { WeaponId::Bayonet, 563 }, // Black Laminate
+    { WeaponId::Bayonet, 578 }, // Bright Water
+    { WeaponId::Bayonet, 580 }, // Freehand
+
+    { WeaponId::Flip, 568 }, // Gamma Doppler Emerald
+    { WeaponId::Flip, 569 }, // Gamma Doppler Phase 1
+    { WeaponId::Flip, 570 }, // Gamma Doppler Phase 2
+    { WeaponId::Flip, 571 }, // Gamma Doppler Phase 3
+    { WeaponId::Flip, 572 }, // Gamma Doppler Phase 4
+    { WeaponId::Flip, 559 }, // Lore
+    { WeaponId::Flip, 574 }, // Autotronic
+    { WeaponId::Flip, 564 }, // Black Laminate
+    { WeaponId::Flip, 578 }, // Bright Water
+    { WeaponId::Flip, 580 }, // Freehand
+
+    { WeaponId::Gut, 568 }, // Gamma Doppler Emerald
+    { WeaponId::Gut, 569 }, // Gamma Doppler Phase 1
+    { WeaponId::Gut, 570 }, // Gamma Doppler Phase 2
+    { WeaponId::Gut, 571 }, // Gamma Doppler Phase 3
+    { WeaponId::Gut, 572 }, // Gamma Doppler Phase 4
+    { WeaponId::Gut, 560 }, // Lore
+    { WeaponId::Gut, 575 }, // Autotronic
+    { WeaponId::Gut, 565 }, // Black Laminate
+    { WeaponId::Gut, 578 }, // Bright Water
+    { WeaponId::Gut, 580 }, // Freehand
+
+    { WeaponId::Karambit, 568 }, // Gamma Doppler Emerald
+    { WeaponId::Karambit, 569 }, // Gamma Doppler Phase 1
+    { WeaponId::Karambit, 570 }, // Gamma Doppler Phase 2
+    { WeaponId::Karambit, 571 }, // Gamma Doppler Phase 3
+    { WeaponId::Karambit, 572 }, // Gamma Doppler Phase 4
+    { WeaponId::Karambit, 561 }, // Lore
+    { WeaponId::Karambit, 576 }, // Autotronic
+    { WeaponId::Karambit, 566 }, // Black Laminate
+    { WeaponId::Karambit, 578 }, // Bright Water
+    { WeaponId::Karambit, 582 }, // Freehand
+
+    { WeaponId::M9Bayonet, 568 }, // Gamma Doppler Emerald
+    { WeaponId::M9Bayonet, 569 }, // Gamma Doppler Phase 1
+    { WeaponId::M9Bayonet, 570 }, // Gamma Doppler Phase 2
+    { WeaponId::M9Bayonet, 571 }, // Gamma Doppler Phase 3
+    { WeaponId::M9Bayonet, 572 }, // Gamma Doppler Phase 4
+    { WeaponId::M9Bayonet, 562 }, // Lore
+    { WeaponId::M9Bayonet, 577 }, // Autotronic
+    { WeaponId::M9Bayonet, 567 }, // Black Laminate
+    { WeaponId::M9Bayonet, 579 }, // Bright Water
+    { WeaponId::M9Bayonet, 581 }, // Freehand
+});
+
+constexpr auto operationWildfireKnives = std::to_array<RareSpecialItem>({
+    { WeaponId::Bowie, 38 }, // Fade
+    { WeaponId::Bowie, 59 }, // Slaughter
+    { WeaponId::Bowie, 40 }, // Night
+    { WeaponId::Bowie, 12 }, // Crimson Web
+    { WeaponId::Bowie, 44 }, // Case Hardened
+    { WeaponId::Bowie, 43 }, // Stained
+    { WeaponId::Bowie, 0 }, // (Vanilla)
+    { WeaponId::Bowie, 42 }, // Blue Steel
+    { WeaponId::Bowie, 77 }, // Boreal Forest
+    { WeaponId::Bowie, 143 }, // Urban Masked
+    { WeaponId::Bowie, 5 }, // Forest DDPAT
+    { WeaponId::Bowie, 175 }, // Scorched
+    { WeaponId::Bowie, 72 }, // Safari Mesh
+});
+
+constexpr auto armsDealKnives = std::to_array<RareSpecialItem>({
+    { WeaponId::Bayonet, 38 }, // Fade
+    { WeaponId::Bayonet, 0 }, // (Vanilla)
+    { WeaponId::Bayonet, 59 }, // Slaughter
+    { WeaponId::Bayonet, 12 }, // Crimson Web
+    { WeaponId::Bayonet, 44 }, // Case Hardened
+    { WeaponId::Bayonet, 42 }, // Blue Steel
+    { WeaponId::Bayonet, 43 }, // Stained
+    { WeaponId::Bayonet, 40 }, // Night
+    { WeaponId::Bayonet, 175 }, // Scorched
+    { WeaponId::Bayonet, 5 }, // Forest DDPAT
+    { WeaponId::Bayonet, 143 }, // Urban Masked
+    { WeaponId::Bayonet, 77 }, // Boreal Forest
+    { WeaponId::Bayonet, 72 }, // Safari Mesh
+
+    { WeaponId::Flip, 38 }, // Fade
+    { WeaponId::Flip, 0 }, // (Vanilla)
+    { WeaponId::Flip, 59 }, // Slaughter
+    { WeaponId::Flip, 12 }, // Crimson Web
+    { WeaponId::Flip, 44 }, // Case Hardened
+    { WeaponId::Flip, 42 }, // Blue Steel
+    { WeaponId::Flip, 43 }, // Stained
+    { WeaponId::Flip, 40 }, // Night
+    { WeaponId::Flip, 175 }, // Scorched
+    { WeaponId::Flip, 5 }, // Forest DDPAT
+    { WeaponId::Flip, 143 }, // Urban Masked
+    { WeaponId::Flip, 77 }, // Boreal Forest
+    { WeaponId::Flip, 72 }, // Safari Mesh
+
+    { WeaponId::Gut, 38 }, // Fade
+    { WeaponId::Gut, 0 }, // (Vanilla)
+    { WeaponId::Gut, 59 }, // Slaughter
+    { WeaponId::Gut, 12 }, // Crimson Web
+    { WeaponId::Gut, 44 }, // Case Hardened
+    { WeaponId::Gut, 42 }, // Blue Steel
+    { WeaponId::Gut, 43 }, // Stained
+    { WeaponId::Gut, 40 }, // Night
+    { WeaponId::Gut, 175 }, // Scorched
+    { WeaponId::Gut, 5 }, // Forest DDPAT
+    { WeaponId::Gut, 143 }, // Urban Masked
+    { WeaponId::Gut, 77 }, // Boreal Forest
+    { WeaponId::Gut, 72 }, // Safari Mesh
+
+    { WeaponId::Karambit, 38 }, // Fade
+    { WeaponId::Karambit, 0 }, // (Vanilla)
+    { WeaponId::Karambit, 59 }, // Slaughter
+    { WeaponId::Karambit, 12 }, // Crimson Web
+    { WeaponId::Karambit, 44 }, // Case Hardened
+    { WeaponId::Karambit, 42 }, // Blue Steel
+    { WeaponId::Karambit, 43 }, // Stained
+    { WeaponId::Karambit, 40 }, // Night
+    { WeaponId::Karambit, 175 }, // Scorched
+    { WeaponId::Karambit, 5 }, // Forest DDPAT
+    { WeaponId::Karambit, 143 }, // Urban Masked
+    { WeaponId::Karambit, 77 }, // Boreal Forest
+    { WeaponId::Karambit, 72 }, // Safari Mesh
+
+    { WeaponId::M9Bayonet, 38 }, // Fade
+    { WeaponId::M9Bayonet, 0 }, // (Vanilla)
+    { WeaponId::M9Bayonet, 59 }, // Slaughter
+    { WeaponId::M9Bayonet, 12 }, // Crimson Web
+    { WeaponId::M9Bayonet, 44 }, // Case Hardened
+    { WeaponId::M9Bayonet, 42 }, // Blue Steel
+    { WeaponId::M9Bayonet, 43 }, // Stained
+    { WeaponId::M9Bayonet, 40 }, // Night
+    { WeaponId::M9Bayonet, 175 }, // Scorched
+    { WeaponId::M9Bayonet, 5 }, // Forest DDPAT
+    { WeaponId::M9Bayonet, 143 }, // Urban Masked
+    { WeaponId::M9Bayonet, 77 }, // Boreal Forest
+    { WeaponId::M9Bayonet, 72 }, // Safari Mesh
+});
+
+constexpr auto shadowCaseKnives = std::to_array<RareSpecialItem>({
+    { WeaponId::Daggers, 38 }, // Fade
+    { WeaponId::Daggers, 0 }, // (Vanilla)
+    { WeaponId::Daggers, 59 }, // Slaughter
+    { WeaponId::Daggers, 12 }, // Crimson Web
+    { WeaponId::Daggers, 44 }, // Case Hardened
+    { WeaponId::Daggers, 42 }, // Blue Steel
+    { WeaponId::Daggers, 43 }, // Stained
+    { WeaponId::Daggers, 40 }, // Night
+    { WeaponId::Daggers, 175 }, // Scorched
+    { WeaponId::Daggers, 5 }, // Forest DDPAT
+    { WeaponId::Daggers, 143 }, // Urban Masked
+    { WeaponId::Daggers, 77 }, // Boreal Forest
+    { WeaponId::Daggers, 72 }, // Safari Mesh
+});
+
+constexpr auto falchionCaseKnives = std::to_array<RareSpecialItem>({
+    { WeaponId::Falchion, 38 }, // Fade
+    { WeaponId::Falchion, 0 }, // (Vanilla)
+    { WeaponId::Falchion, 59 }, // Slaughter
+    { WeaponId::Falchion, 12 }, // Crimson Web
+    { WeaponId::Falchion, 44 }, // Case Hardened
+    { WeaponId::Falchion, 42 }, // Blue Steel
+    { WeaponId::Falchion, 43 }, // Stained
+    { WeaponId::Falchion, 40 }, // Night
+    { WeaponId::Falchion, 175 }, // Scorched
+    { WeaponId::Falchion, 5 }, // Forest DDPAT
+    { WeaponId::Falchion, 143 }, // Urban Masked
+    { WeaponId::Falchion, 77 }, // Boreal Forest
+    { WeaponId::Falchion, 72 }, // Safari Mesh
+});
+
+constexpr auto operationBreakoutKnives = std::to_array<RareSpecialItem>({
+    { WeaponId::Butterfly, 38 }, // Fade
+    { WeaponId::Butterfly, 0 }, // (Vanilla)
+    { WeaponId::Butterfly, 59 }, // Slaughter
+    { WeaponId::Butterfly, 12 }, // Crimson Web
+    { WeaponId::Butterfly, 44 }, // Case Hardened
+    { WeaponId::Butterfly, 42 }, // Blue Steel
+    { WeaponId::Butterfly, 43 }, // Stained
+    { WeaponId::Butterfly, 40 }, // Night
+    { WeaponId::Butterfly, 175 }, // Scorched
+    { WeaponId::Butterfly, 5 }, // Forest DDPAT
+    { WeaponId::Butterfly, 143 }, // Urban Masked
+    { WeaponId::Butterfly, 77 }, // Boreal Forest
+    { WeaponId::Butterfly, 72 }, // Safari Mesh
+});
+
+constexpr auto huntsmanCaseKnives = std::to_array<RareSpecialItem>({
+    { WeaponId::Huntsman, 38 }, // Fade
+    { WeaponId::Huntsman, 0 }, // (Vanilla)
+    { WeaponId::Huntsman, 59 }, // Slaughter
+    { WeaponId::Huntsman, 12 }, // Crimson Web
+    { WeaponId::Huntsman, 44 }, // Case Hardened
+    { WeaponId::Huntsman, 42 }, // Blue Steel
+    { WeaponId::Huntsman, 43 }, // Stained
+    { WeaponId::Huntsman, 40 }, // Night
+    { WeaponId::Huntsman, 175 }, // Scorched
+    { WeaponId::Huntsman, 5 }, // Forest DDPAT
+    { WeaponId::Huntsman, 143 }, // Urban Masked
+    { WeaponId::Huntsman, 77 }, // Boreal Forest
+    { WeaponId::Huntsman, 72 }, // Safari Mesh
+});
+
 struct CrateRareSpecialItems {
     WeaponId crateWeaponID;
     std::span<const RareSpecialItem> items;
 };
 
 constexpr auto crateRareSpecialItems = std::to_array<CrateRareSpecialItems>({
+    { WeaponId::CSGOWeaponCase, armsDealKnives },
+    { WeaponId::Esports2013Case, armsDealKnives },
+    { WeaponId::OperationBravoCase, armsDealKnives },
+    { WeaponId::CSGOWeaponCase2, armsDealKnives },
+    { WeaponId::Esports2013WinterCase, armsDealKnives },
+    { WeaponId::WinterOffensiveCase, armsDealKnives },
+    { WeaponId::CSGOWeaponCase3, armsDealKnives },
+    { WeaponId::OperationPhoenixCase, armsDealKnives },
+    { WeaponId::HuntsmanCase, huntsmanCaseKnives },
+    { WeaponId::OperationBreakoutCase, operationBreakoutKnives },
+    { WeaponId::Esports2014SummerCase, armsDealKnives },
+    { WeaponId::OperationVanguardCase, armsDealKnives },
     { WeaponId::ChromaCase, chromaKnives },
     { WeaponId::Chroma2Case, chromaKnives },
+    { WeaponId::FalchionCase, falchionCaseKnives },
+    { WeaponId::ShadowCase, shadowCaseKnives },
+    { WeaponId::RevolverCase, armsDealKnives },
+    { WeaponId::OperationWildfireCase, operationWildfireKnives },
     { WeaponId::Chroma3Case, chromaKnives },
+    { WeaponId::GammaCase, gammaKnives },
+    { WeaponId::Gamma2Case, gammaKnives },
+    { WeaponId::GloveCase, gloveCaseGloves },
     { WeaponId::SpectrumCase, spectrumKnives },
+    { WeaponId::OperationHydraCase, gloveCaseGloves },
     { WeaponId::Spectrum2Case, spectrumKnives },
     { WeaponId::ClutchCase, clutchGloves },
     { WeaponId::HorizonCase, horizonKnives },
@@ -755,6 +1016,8 @@ std::size_t ItemGenerator::createDefaultDynamicData(const game_items::Item& item
         index = Inventory::emplaceDynamicData(std::move(dynamicData));
     } else if (item.isTournamentCoin()) {
         index = Inventory::emplaceDynamicData(DynamicTournamentCoinData{});
+    } else if (item.isGraffiti()) {
+        index = Inventory::emplaceDynamicData(DynamicGraffitiData{});
     }
 
     return index;

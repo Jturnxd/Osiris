@@ -11,12 +11,12 @@
 #define STBI_NO_FAILURE_STRINGS
 #define STBI_NO_STDIO
 #define STB_IMAGE_IMPLEMENTATION
-#include "../stb_image.h"
+#include <stb_image.h>
 
-#include "../imgui/imgui.h"
+#include <imgui/imgui.h>
 #define IMGUI_DEFINE_MATH_OPERATORS
-#include "../imgui/imgui_internal.h"
-#include "../imgui/imgui_stdlib.h"
+#include <imgui/imgui_internal.h>
+#include <imgui/imgui_stdlib.h>
 #include "../Interfaces.h"
 #include "InventoryChanger.h"
 #include "../ProtobufReader.h"
@@ -552,7 +552,7 @@ static ImTextureID getItemIconTexture(std::string_view iconpath) noexcept;
         return storage.getMusicKit(item).name;
     if (item.isSticker())
         return storage.getStickerKit(item).name;
-    if (item.isGraffiti() || item.isSealedGraffiti())
+    if (item.isGraffiti())
         return storage.getGraffitiKit(item).name;
     if (item.isPatch())
         return storage.getPatchKit(item).name;
