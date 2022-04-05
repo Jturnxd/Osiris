@@ -10,18 +10,20 @@
 #include "../SDK/Entity.h"
 #include "../SDK/ItemSchema.h"
 #include "GameItems/Lookup.h"
+#include "Inventory/Item.h"
+#include "Inventory/Structs.h"
 
 using Inventory::InvalidDynamicDataIdx;
 using Inventory::BASE_ITEMID;
 
-static std::vector<DynamicSkinData> dynamicSkinData;
-static std::vector<DynamicGloveData> dynamicGloveData;
-static std::vector<DynamicAgentData> dynamicAgentData;
-static std::vector<DynamicMusicData> dynamicMusicData;
-static std::vector<DynamicSouvenirPackageData> dynamicSouvenirPackageData;
-static std::vector<DynamicServiceMedalData> dynamicServiceMedalData;
-static std::vector<DynamicTournamentCoinData> dynamicTournamentCoinData;
-static std::vector<DynamicGraffitiData> dynamicGraffitiData;
+static std::vector<inventory::Skin> dynamicSkinData;
+static std::vector<inventory::Glove> dynamicGloveData;
+static std::vector<inventory::Agent> dynamicAgentData;
+static std::vector<inventory::Music> dynamicMusicData;
+static std::vector<inventory::SouvenirPackage> dynamicSouvenirPackageData;
+static std::vector<inventory::ServiceMedal> dynamicServiceMedalData;
+static std::vector<inventory::TournamentCoin> dynamicTournamentCoinData;
+static std::vector<inventory::Graffiti> dynamicGraffitiData;
 
 class InventoryImpl {
 public:
@@ -33,7 +35,7 @@ public:
         std::size_t index;
     };
 
-    static std::vector<InventoryItem>& get() noexcept
+    static std::vector<inventory::Item>& get() noexcept
     {
         return instance().inventory;
     }
@@ -58,7 +60,7 @@ public:
         instance()._runFrame();
     }
 
-    static InventoryItem* getItem(std::uint64_t itemID) noexcept
+    static inventory::Item* getItem(std::uint64_t itemID) noexcept
     {
         return instance()._getItem(itemID);
     }
@@ -83,7 +85,7 @@ public:
         return instance()._getItemIndex(itemID);
     }
 private:
-    InventoryItem* _getItem(std::uint64_t itemID) noexcept
+    inventory::Item* _getItem(std::uint64_t itemID) noexcept
     {
         if (itemID >= BASE_ITEMID && static_cast<std::size_t>(itemID - BASE_ITEMID) < inventory.size())
             return &inventory[static_cast<std::size_t>(itemID - BASE_ITEMID)];
@@ -96,12 +98,14 @@ private:
         return static_cast<std::size_t>(itemID - BASE_ITEMID - std::count_if(inventory.begin(), inventory.begin() + static_cast<std::size_t>(itemID - BASE_ITEMID), [](const auto& item) { return item.isDeleted(); }));
     }
 
-    static void initSkinEconItem(const InventoryItem& inventoryItem, EconItem& econItem) noexcept
+    static void initSkinEconItem(const inventory::Item& inventoryItem, EconItem& econItem) noexcept
     {
         assert(inventoryItem.isSkin());
 
+        EconItemAttributeSetter attributeSetter{ *memory->itemSystem()->getItemSchema() };
+
         const auto paintKit = StaticData::lookup().getStorage().getPaintKit(inventoryItem.get()).id;
-        econItem.setPaintKit(static_cast<float>(paintKit));
+        attributeSetter.setPaintKit(econItem, static_cast<float>(paintKit));
 
         const auto& dynamicData = dynamicSkinData[inventoryItem.getDynamicDataIndex()];
         const auto isMP5LabRats = Helpers::isMP5LabRats(inventoryItem.get().getWeaponID(), paintKit);
@@ -109,8 +113,8 @@ private:
             econItem.quality = 12;
         } else {
             if (dynamicData.statTrak > -1) {
-                econItem.setStatTrak(dynamicData.statTrak);
-                econItem.setStatTrakType(0);
+                attributeSetter.setStatTrak(econItem, dynamicData.statTrak);
+                attributeSetter.setStatTrakType(econItem, 0);
                 econItem.quality = 9;
             }
             if (Helpers::isKnife(econItem.weaponId))
@@ -118,22 +122,22 @@ private:
         }
 
         if (isMP5LabRats) {
-            econItem.setSpecialEventID(1);
+            attributeSetter.setSpecialEventID(econItem, 1);
         } else {
             if (dynamicData.tournamentID != 0)
-                econItem.setTournamentID(dynamicData.tournamentID);
+                attributeSetter.setTournamentID(econItem, dynamicData.tournamentID);
 
             if (dynamicData.tournamentStage != TournamentStage{ 0 }) {
-                econItem.setTournamentStage(static_cast<int>(dynamicData.tournamentStage));
-                econItem.setTournamentTeam1(static_cast<int>(dynamicData.tournamentTeam1));
-                econItem.setTournamentTeam2(static_cast<int>(dynamicData.tournamentTeam2));
+                attributeSetter.setTournamentStage(econItem, static_cast<int>(dynamicData.tournamentStage));
+                attributeSetter.setTournamentTeam1(econItem, static_cast<int>(dynamicData.tournamentTeam1));
+                attributeSetter.setTournamentTeam2(econItem, static_cast<int>(dynamicData.tournamentTeam2));
                 if (dynamicData.proPlayer != static_cast<ProPlayer>(0))
-                    econItem.setTournamentPlayer(static_cast<int>(dynamicData.proPlayer));
+                    attributeSetter.setTournamentPlayer(econItem, static_cast<int>(dynamicData.proPlayer));
             }
         }
 
-        econItem.setWear(dynamicData.wear);
-        econItem.setSeed(static_cast<float>(dynamicData.seed));
+        attributeSetter.setWear(econItem, dynamicData.wear);
+        attributeSetter.setSeed(econItem, static_cast<float>(dynamicData.seed));
         memory->setCustomName(&econItem, dynamicData.nameTag.c_str());
 
         for (std::size_t j = 0; j < dynamicData.stickers.size(); ++j) {
@@ -141,12 +145,12 @@ private:
             if (sticker.stickerID == 0)
                 continue;
 
-            econItem.setStickerID(j, sticker.stickerID);
-            econItem.setStickerWear(j, sticker.wear);
+            attributeSetter.setStickerID(econItem, j, sticker.stickerID);
+            attributeSetter.setStickerWear(econItem, j, sticker.wear);
         }
     }
 
-    std::uint64_t _createSOCItem(const InventoryItem& inventoryItem, bool asUnacknowledged) const noexcept
+    std::uint64_t _createSOCItem(const inventory::Item& inventoryItem, bool asUnacknowledged) const noexcept
     {
         const auto localInventory = memory->inventoryManager->getLocalInventory();
         if (!localInventory)
@@ -169,36 +173,40 @@ private:
         econItem->quality = 4;
         econItem->weaponId = item.getWeaponID();
 
+        const auto& storage = StaticData::lookup().getStorage();
+
+        EconItemAttributeSetter attributeSetter{ *memory->itemSystem()->getItemSchema() };
+
         if (item.isSticker()) {
-            econItem->setStickerID(0, StaticData::lookup().getStorage().getStickerKit(item).id);
+            attributeSetter.setStickerID(*econItem, 0, storage.getStickerKit(item).id);
         } else if (item.isPatch()) {
-            econItem->setStickerID(0, StaticData::lookup().getStorage().getPatchKit(item).id);
+            attributeSetter.setStickerID(*econItem, 0, storage.getPatch(item).id);
         } else if (item.isGraffiti()) {
-            econItem->setStickerID(0, StaticData::lookup().getStorage().getGraffitiKit(item).id);
+            attributeSetter.setStickerID(*econItem, 0, storage.getGraffitiKit(item).id);
             const auto& dynamicData = dynamicGraffitiData[inventoryItem.getDynamicDataIndex()];
             if (dynamicData.usesLeft >= 0) {
                 econItem->weaponId = WeaponId::Graffiti;
-                econItem->setSpraysRemaining(dynamicData.usesLeft);
+                attributeSetter.setSpraysRemaining(*econItem, dynamicData.usesLeft);
             }
         } else if (item.isMusic()) {
-            econItem->setMusicID(StaticData::lookup().getStorage().getMusicKit(item).id);
+            attributeSetter.setMusicID(*econItem, storage.getMusicKit(item).id);
             const auto& dynamicData = dynamicMusicData[inventoryItem.getDynamicDataIndex()];
             if (dynamicData.statTrak > -1) {
-                econItem->setStatTrak(dynamicData.statTrak);
-                econItem->setStatTrakType(1);
+                attributeSetter.setStatTrak(*econItem, dynamicData.statTrak);
+                attributeSetter.setStatTrakType(*econItem, 1);
                 econItem->quality = 9;
             }
         } else if (item.isSkin()) {
             initSkinEconItem(inventoryItem, *econItem);
         } else if (item.isGloves()) {
             econItem->quality = 3;
-            econItem->setPaintKit(static_cast<float>(StaticData::lookup().getStorage().getPaintKit(item).id));
+            attributeSetter.setPaintKit(*econItem, static_cast<float>(storage.getPaintKit(item).id));
 
             const auto& dynamicData = dynamicGloveData[inventoryItem.getDynamicDataIndex()];
-            econItem->setWear(dynamicData.wear);
-            econItem->setSeed(static_cast<float>(dynamicData.seed));
+            attributeSetter.setWear(*econItem, dynamicData.wear);
+            attributeSetter.setSeed(*econItem, static_cast<float>(dynamicData.seed));
         } else if (item.isCollectible()) {
-            if (StaticData::lookup().getStorage().isCollectibleGenuine(item))
+            if (storage.isCollectibleGenuine(item))
                 econItem->quality = 1;
         } else if (item.isAgent()) {
             const auto& dynamicData = dynamicAgentData[inventoryItem.getDynamicDataIndex()];
@@ -207,21 +215,21 @@ private:
                 if (patch.patchID == 0)
                     continue;
 
-                econItem->setStickerID(j, patch.patchID);
+                attributeSetter.setStickerID(*econItem, j, patch.patchID);
             }
         } else if (item.isServiceMedal()) {
             if (const auto& dynamicData = dynamicServiceMedalData[inventoryItem.getDynamicDataIndex()]; dynamicData.issueDateTimestamp != 0)
-                econItem->setIssueDate(dynamicData.issueDateTimestamp);
+                attributeSetter.setIssueDate(*econItem, dynamicData.issueDateTimestamp);
         } else if (item.isTournamentCoin()) {
-            econItem->setDropsAwarded(dynamicTournamentCoinData[inventoryItem.getDynamicDataIndex()].dropsAwarded);
-            econItem->setDropsRedeemed(0);
+            attributeSetter.setDropsAwarded(*econItem, dynamicTournamentCoinData[inventoryItem.getDynamicDataIndex()].dropsAwarded);
+            attributeSetter.setDropsRedeemed(*econItem, 0);
         } else if (item.isCase() && StaticData::isSouvenirPackage(item)) {
             if (const auto& dynamicData = dynamicSouvenirPackageData[inventoryItem.getDynamicDataIndex()]; dynamicData.tournamentStage != TournamentStage{ 0 }) {
-                econItem->setTournamentStage(static_cast<int>(dynamicData.tournamentStage));
-                econItem->setTournamentTeam1(static_cast<int>(dynamicData.tournamentTeam1));
-                econItem->setTournamentTeam2(static_cast<int>(dynamicData.tournamentTeam2));
+                attributeSetter.setTournamentStage(*econItem, static_cast<int>(dynamicData.tournamentStage));
+                attributeSetter.setTournamentTeam1(*econItem, static_cast<int>(dynamicData.tournamentTeam1));
+                attributeSetter.setTournamentTeam2(*econItem, static_cast<int>(dynamicData.tournamentTeam2));
                 if (dynamicData.proPlayer != static_cast<ProPlayer>(0))
-                    econItem->setTournamentPlayer(static_cast<int>(dynamicData.proPlayer));
+                    attributeSetter.setTournamentPlayer(*econItem, static_cast<int>(dynamicData.proPlayer));
             }
         }
 
@@ -347,98 +355,106 @@ private:
 
     std::vector<std::tuple<std::reference_wrapper<const game_items::Item>, std::size_t, bool>> toAdd;
     std::vector<ToEquip> toEquip;
-    std::vector<InventoryItem> inventory;
+    std::vector<inventory::Item> inventory;
 };
 
-DynamicSkinData& Inventory::dynamicSkinData(std::size_t index) noexcept
+inventory::Skin& Inventory::dynamicSkinData(const inventory::Item& item) noexcept
 {
-    return ::dynamicSkinData[index];
+    assert(item.isSkin());
+    return ::dynamicSkinData[item.getDynamicDataIndex()];
 }
 
-DynamicGloveData& Inventory::dynamicGloveData(std::size_t index) noexcept
+inventory::Glove& Inventory::dynamicGloveData(const inventory::Item& item) noexcept
 {
-    return ::dynamicGloveData[index];
+    assert(item.isGlove());
+    return ::dynamicGloveData[item.getDynamicDataIndex()];
 }
 
-DynamicAgentData& Inventory::dynamicAgentData(std::size_t index) noexcept
+inventory::Agent& Inventory::dynamicAgentData(const inventory::Item& item) noexcept
 {
-    return ::dynamicAgentData[index];
+    assert(item.isAgent());
+    return ::dynamicAgentData[item.getDynamicDataIndex()];
 }
 
-DynamicMusicData& Inventory::dynamicMusicData(std::size_t index) noexcept
+inventory::Music& Inventory::dynamicMusicData(const inventory::Item& item) noexcept
 {
-    return ::dynamicMusicData[index];
+    assert(item.isMusic());
+    return ::dynamicMusicData[item.getDynamicDataIndex()];
 }
 
-DynamicSouvenirPackageData& Inventory::dynamicSouvenirPackageData(std::size_t index) noexcept
+inventory::SouvenirPackage& Inventory::dynamicSouvenirPackageData(const inventory::Item& item) noexcept
 {
-    return ::dynamicSouvenirPackageData[index];
+    assert(item.isCase() && StaticData::isSouvenirPackage(item.get()));
+    return ::dynamicSouvenirPackageData[item.getDynamicDataIndex()];
 }
 
-DynamicServiceMedalData& Inventory::dynamicServiceMedalData(std::size_t index) noexcept
+inventory::ServiceMedal& Inventory::dynamicServiceMedalData(const inventory::Item& item) noexcept
 {
-    return ::dynamicServiceMedalData[index];
+    assert(item.isServiceMedal());
+    return ::dynamicServiceMedalData[item.getDynamicDataIndex()];
 }
 
-DynamicTournamentCoinData& Inventory::dynamicTournamentCoinData(std::size_t index) noexcept
+inventory::TournamentCoin& Inventory::dynamicTournamentCoinData(const inventory::Item& item) noexcept
 {
-    return ::dynamicTournamentCoinData[index];
+    assert(item.isTournamentCoin());
+    return ::dynamicTournamentCoinData[item.getDynamicDataIndex()];
 }
 
-DynamicGraffitiData& Inventory::dynamicGraffitiData(std::size_t index) noexcept
+inventory::Graffiti& Inventory::dynamicGraffitiData(const inventory::Item& item) noexcept
 {
-    return ::dynamicGraffitiData[index];
+    assert(item.isGraffiti());
+    return ::dynamicGraffitiData[item.getDynamicDataIndex()];
 }
 
-std::size_t Inventory::emplaceDynamicData(DynamicSkinData&& data) noexcept
+std::size_t Inventory::emplaceDynamicData(inventory::Skin&& data) noexcept
 {
     ::dynamicSkinData.push_back(std::move(data));
     return ::dynamicSkinData.size() - 1;
 }
 
-std::size_t Inventory::emplaceDynamicData(DynamicGloveData&& data) noexcept
+std::size_t Inventory::emplaceDynamicData(inventory::Glove&& data) noexcept
 {
     ::dynamicGloveData.push_back(std::move(data));
     return ::dynamicGloveData.size() - 1;
 }
 
-std::size_t Inventory::emplaceDynamicData(DynamicAgentData&& data) noexcept
+std::size_t Inventory::emplaceDynamicData(inventory::Agent&& data) noexcept
 {
     ::dynamicAgentData.push_back(std::move(data));
     return ::dynamicAgentData.size() - 1;
 }
 
-std::size_t Inventory::emplaceDynamicData(DynamicMusicData&& data) noexcept
+std::size_t Inventory::emplaceDynamicData(inventory::Music&& data) noexcept
 {
     ::dynamicMusicData.push_back(std::move(data));
     return ::dynamicMusicData.size() - 1;
 }
 
-std::size_t Inventory::emplaceDynamicData(DynamicSouvenirPackageData&& data) noexcept
+std::size_t Inventory::emplaceDynamicData(inventory::SouvenirPackage&& data) noexcept
 {
     ::dynamicSouvenirPackageData.push_back(std::move(data));
     return ::dynamicSouvenirPackageData.size() - 1;
 }
 
-std::size_t Inventory::emplaceDynamicData(DynamicServiceMedalData&& data) noexcept
+std::size_t Inventory::emplaceDynamicData(inventory::ServiceMedal&& data) noexcept
 {
     ::dynamicServiceMedalData.push_back(std::move(data));
     return ::dynamicServiceMedalData.size() - 1;
 }
 
-std::size_t Inventory::emplaceDynamicData(DynamicTournamentCoinData&& data) noexcept
+std::size_t Inventory::emplaceDynamicData(inventory::TournamentCoin&& data) noexcept
 {
     ::dynamicTournamentCoinData.push_back(std::move(data));
     return ::dynamicTournamentCoinData.size() - 1;
 }
 
-std::size_t Inventory::emplaceDynamicData(DynamicGraffitiData&& data) noexcept
+std::size_t Inventory::emplaceDynamicData(inventory::Graffiti&& data) noexcept
 {
     ::dynamicGraffitiData.push_back(std::move(data));
     return ::dynamicGraffitiData.size() - 1;
 }
 
-std::vector<InventoryItem>& Inventory::get() noexcept
+std::vector<inventory::Item>& Inventory::get() noexcept
 {
     return InventoryImpl::get();
 }
@@ -468,7 +484,7 @@ void Inventory::runFrame() noexcept
     InventoryImpl::runFrame();
 }
 
-InventoryItem* Inventory::getItem(std::uint64_t itemID) noexcept
+inventory::Item* Inventory::getItem(std::uint64_t itemID) noexcept
 {
     return InventoryImpl::getItem(itemID);
 }

@@ -13,6 +13,8 @@
 #include "../SDK/ItemSchema.h"
 #include "TournamentMatches.h"
 #include "GameItems/Lookup.h"
+#include "Inventory/Item.h"
+#include "Inventory/Structs.h"
 
 static float generateWear() noexcept
 {
@@ -32,7 +34,7 @@ static float generateWear() noexcept
 
 using StaticData::TournamentMap;
 
-[[nodiscard]] static std::array<StickerConfig, 5> generateSouvenirStickers(WeaponId weaponID, std::uint32_t tournamentID, TournamentMap map, TournamentStage stage, TournamentTeam team1, TournamentTeam team2, ProPlayer player) noexcept;
+[[nodiscard]] static std::array<inventory::Skin::Sticker, 5> generateSouvenirStickers(WeaponId weaponID, std::uint32_t tournamentID, TournamentMap map, TournamentStage stage, TournamentTeam team1, TournamentTeam team2, ProPlayer player) noexcept;
 
 template <typename Integral, std::size_t N>
 [[nodiscard]] constexpr auto normalizedFloatsToIntegers(const std::array<float, N>& floats) noexcept
@@ -82,7 +84,7 @@ constexpr auto dropRates = std::to_array<DropRate>({
 
 struct RareSpecialItem {
     WeaponId weaponID;
-    int paintKit;
+    short paintKit;
 };
 
 constexpr auto operationRiptideKnives = std::to_array<RareSpecialItem>({
@@ -854,7 +856,7 @@ constexpr auto crateRareSpecialItems = std::to_array<CrateRareSpecialItems>({
     return loot[Helpers::random<std::size_t>(0u, loot.size() - 1u)];
 }
 
-std::pair<const game_items::Item&, std::size_t> ItemGenerator::generateItemFromContainer(const InventoryItem& caseItem) noexcept
+std::pair<const game_items::Item&, std::size_t> ItemGenerator::generateItemFromContainer(const inventory::Item& caseItem) noexcept
 {
     assert(caseItem.isCase());
 
@@ -865,18 +867,18 @@ std::pair<const game_items::Item&, std::size_t> ItemGenerator::generateItemFromC
     std::size_t dynamicDataIdx = Inventory::InvalidDynamicDataIdx;
 
     if (caseData.willProduceStatTrak && unlockedItem.isMusic()) {
-        DynamicMusicData dynamicData;
+        inventory::Music dynamicData;
         dynamicData.statTrak = 0;
         dynamicDataIdx = Inventory::emplaceDynamicData(std::move(dynamicData));
     } else if (unlockedItem.isSkin()) {
-        DynamicSkinData dynamicData;
+        inventory::Skin dynamicData;
         const auto& staticData = StaticData::lookup().getStorage().getPaintKit(unlockedItem);
         dynamicData.wear = std::lerp(staticData.wearRemapMin, staticData.wearRemapMax, generateWear());
         dynamicData.seed = Helpers::random(1, 1000);
 
         if (StaticData::isSouvenirPackage(caseItem.get())) {
             dynamicData.tournamentID = caseData.souvenirPackageTournamentID;
-            const auto& souvenir = Inventory::dynamicSouvenirPackageData(caseItem.getDynamicDataIndex());
+            const auto& souvenir = Inventory::dynamicSouvenirPackageData(caseItem);
             dynamicData.tournamentStage = souvenir.tournamentStage;
             dynamicData.tournamentTeam1 = souvenir.tournamentTeam1;
             dynamicData.tournamentTeam2 = souvenir.tournamentTeam2;
@@ -925,7 +927,7 @@ constexpr auto operator<=>(TournamentMap a, TournamentMap b) noexcept
 
 [[nodiscard]] static auto generateSouvenirPackageData(const StaticData::Case& caseData) noexcept
 {
-    DynamicSouvenirPackageData dynamicData;
+    inventory::SouvenirPackage dynamicData;
 
     if (const auto matches = getTournamentMatches(caseData.souvenirPackageTournamentID); !matches.empty()) {
         if (const auto matchesOnMap = filterMatchesToMap(matches, caseData.tournamentMap); !matchesOnMap.empty()) {
@@ -989,7 +991,7 @@ std::size_t ItemGenerator::createDefaultDynamicData(const game_items::Item& item
 
     if (item.isSkin()) {
         const auto& staticData = StaticData::lookup().getStorage().getPaintKit(item);
-        DynamicSkinData dynamicData;
+        inventory::Skin dynamicData;
         dynamicData.wear = std::lerp(staticData.wearRemapMin, staticData.wearRemapMax, Helpers::random(0.0f, 0.07f));
         dynamicData.seed = Helpers::random(1, 1000);
 
@@ -999,25 +1001,25 @@ std::size_t ItemGenerator::createDefaultDynamicData(const game_items::Item& item
         index = Inventory::emplaceDynamicData(std::move(dynamicData));
     } else if (item.isGloves()) {
         const auto& staticData = StaticData::lookup().getStorage().getPaintKit(item);
-        DynamicGloveData dynamicData;
+        inventory::Glove dynamicData;
         dynamicData.wear = std::lerp(staticData.wearRemapMin, staticData.wearRemapMax, Helpers::random(0.0f, 0.07f));
         dynamicData.seed = Helpers::random(1, 1000);
         index = Inventory::emplaceDynamicData(std::move(dynamicData));
     } else if (item.isAgent()) {
-        index = Inventory::emplaceDynamicData(DynamicAgentData{});
+        index = Inventory::emplaceDynamicData(inventory::Agent{});
     } else if (item.isMusic()) {
-        index = Inventory::emplaceDynamicData(DynamicMusicData{});
+        index = Inventory::emplaceDynamicData(inventory::Music{});
     } else if (item.isCase()) {
         if (const auto& staticData = StaticData::getCase(item); StaticData::isSouvenirPackage(item))
             index = Inventory::emplaceDynamicData(generateSouvenirPackageData(staticData));
     } else if (item.isServiceMedal()) {
-        DynamicServiceMedalData dynamicData;
+        inventory::ServiceMedal dynamicData;
         dynamicData.issueDateTimestamp = getRandomDateTimestampOfYear(StaticData::lookup().getStorage().getServiceMedalYear(item));
         index = Inventory::emplaceDynamicData(std::move(dynamicData));
     } else if (item.isTournamentCoin()) {
-        index = Inventory::emplaceDynamicData(DynamicTournamentCoinData{});
+        index = Inventory::emplaceDynamicData(inventory::TournamentCoin{});
     } else if (item.isGraffiti()) {
-        index = Inventory::emplaceDynamicData(DynamicGraffitiData{});
+        index = Inventory::emplaceDynamicData(inventory::Graffiti{});
     }
 
     return index;
@@ -1040,9 +1042,9 @@ std::size_t ItemGenerator::createDefaultDynamicData(const game_items::Item& item
     return 0;
 }
 
-[[nodiscard]] static std::array<StickerConfig, 5> generateSouvenirStickers(WeaponId weaponID, std::uint32_t tournamentID, TournamentMap map, TournamentStage stage, TournamentTeam team1, TournamentTeam team2, ProPlayer player) noexcept
+[[nodiscard]] static std::array<inventory::Skin::Sticker, 5> generateSouvenirStickers(WeaponId weaponID, std::uint32_t tournamentID, TournamentMap map, TournamentStage stage, TournamentTeam team1, TournamentTeam team2, ProPlayer player) noexcept
 {
-    std::array<StickerConfig, 5> stickers;
+    std::array<inventory::Skin::Sticker, 5> stickers;
 
     stickers[0].stickerID = StaticData::lookup().findTournamentEventStickerID(tournamentID);
 

@@ -28,7 +28,8 @@ enum class ItemType {
     ServiceMedal,
     SouvenirToken,
     TournamentCoin,
-    VanillaKnife
+    VanillaKnife,
+    VanillaSkin
 };
 
 Item& addToStorage(Storage& storage, ItemType type, EconRarity rarity, WeaponId weaponID, std::size_t dataIndex, std::string_view iconPath)
@@ -90,6 +91,9 @@ Item& addToStorage(Storage& storage, ItemType type, EconRarity rarity, WeaponId 
     case ItemType::VanillaKnife:
         storage.addVanillaKnife(weaponID, iconPath);
         break;
+    case ItemType::VanillaSkin:
+        storage.addVanillaSkin(weaponID, iconPath);
+        break;
     default:
         assert(false && "Unhandled item type!");
         break;
@@ -118,6 +122,7 @@ constexpr bool validateItemType(const Item& item, ItemType desiredType) noexcept
     case ItemType::SouvenirToken: return item.isSouvenirToken();
     case ItemType::TournamentCoin: return item.isTournamentCoin();
     case ItemType::VanillaKnife: return item.isSkin();
+    case ItemType::VanillaSkin: return item.isSkin();
     default: return false;
     }
 }
@@ -158,7 +163,8 @@ const auto typesToTest = testing::Values(
     ItemType::ServiceMedal,
     ItemType::SouvenirToken,
     ItemType::TournamentCoin,
-    ItemType::VanillaKnife
+    ItemType::VanillaKnife,
+    ItemType::VanillaSkin
 );
 
 INSTANTIATE_TEST_SUITE_P(InventoryChanger, GameItemsStorageTest, typesToTest);
@@ -205,6 +211,49 @@ TEST_P(GameItemsStorageItemImagePathTest, AddedItemHasCorrectImagePath) {
 
 INSTANTIATE_TEST_SUITE_P(InventoryChanger, GameItemsStorageItemImagePathTest,
     testing::Combine(typesToTest, testing::Values(std::string_view{}, "image.png")));
+
+
+using ItemTypeAndWeaponID = std::tuple<ItemType, WeaponId>;
+
+class GameItemsStorageWeaponIdTest : public testing::TestWithParam<ItemTypeAndWeaponID> {};
+
+TEST_P(GameItemsStorageWeaponIdTest, AddedItemHasCorrectWeaponID) {
+    Storage storage;
+    const auto [type, weaponID] = GetParam();
+    const auto& item = addToStorage(storage, type, EconRarity::Default, weaponID, 0, {});
+    ASSERT_EQ(item.getWeaponID(), weaponID);
+}
+
+const auto typesWithMultipleWeaponIDs = testing::Values(
+    ItemType::Gloves,
+    ItemType::Skin,
+    ItemType::Collectible,
+    ItemType::NameTag,
+    ItemType::Agent,
+    ItemType::Case,
+    ItemType::CaseKey,
+    ItemType::OperationPass,
+    ItemType::StatTrakSwapTool,
+    ItemType::ViewerPass,
+    ItemType::ServiceMedal,
+    ItemType::SouvenirToken,
+    ItemType::TournamentCoin,
+    ItemType::VanillaKnife,
+    ItemType::VanillaSkin
+);
+
+INSTANTIATE_TEST_SUITE_P(TypesWithMultipleWeaponIDs, GameItemsStorageWeaponIdTest,
+    testing::Combine(typesWithMultipleWeaponIDs,
+                     testing::Values(WeaponId::Ak47, WeaponId::Bayonet, WeaponId::GloveLeatherWrap)));
+
+INSTANTIATE_TEST_SUITE_P(TypesWithConstantWeaponID, GameItemsStorageWeaponIdTest,
+    testing::Values(
+        ItemTypeAndWeaponID{ ItemType::Patch, WeaponId::Patch },
+        ItemTypeAndWeaponID{ ItemType::Graffiti, WeaponId::SealedGraffiti },
+        ItemTypeAndWeaponID{ ItemType::Sticker, WeaponId::Sticker },
+        ItemTypeAndWeaponID{ ItemType::Music, WeaponId::MusicKit }
+    )
+);
 
 }
 }

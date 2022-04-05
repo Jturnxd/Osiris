@@ -22,7 +22,7 @@
 #include "../ProtobufReader.h"
 #include "../Texture.h"
 
-#include "../nlohmann/json.hpp"
+#include <nlohmann/json.hpp>
 
 #include "../SDK/ClassId.h"
 #include "../SDK/Client.h"
@@ -50,6 +50,8 @@
 #include "ToolUser.h"
 
 #include "GameItems/Lookup.h"
+#include "Inventory/Item.h"
+#include "Inventory/Structs.h"
 
 static void addToInventory(const std::unordered_map<StaticData::ItemIndex2, int>& toAdd, const std::vector<StaticData::ItemIndex2>& order) noexcept
 {
@@ -348,7 +350,7 @@ static void applyPlayerAgent(CSPlayerInventory& localInventory) noexcept
     if (!model)
         return;
 
-    const auto& dynamicData = Inventory::dynamicAgentData(item->getDynamicDataIndex());
+    const auto& dynamicData = Inventory::dynamicAgentData(*item);
     for (std::size_t i = 0; i < dynamicData.patches.size(); ++i) {
         if (const auto& patch = dynamicData.patches[i]; patch.patchID != 0)
             localPlayer->playerPatchIndices()[i] = patch.patchID;
@@ -480,10 +482,11 @@ void InventoryChanger::updateStatTrak(GameEvent& event) noexcept
     if (!soc)
         return;
 
-    auto& dynamicData = Inventory::dynamicSkinData(item->getDynamicDataIndex());
+    auto& dynamicData = Inventory::dynamicSkinData(*item);
     if (dynamicData.statTrak > -1) {
         ++dynamicData.statTrak;
-        soc->setStatTrak(dynamicData.statTrak);
+        EconItemAttributeSetter attributeSetter{ *memory->itemSystem()->getItemSchema() };
+        attributeSetter.setStatTrak(*soc, dynamicData.statTrak);
         localInventory->soUpdated(localInventory->getSOID(), (SharedObject*)soc, 4);
     }
 }
@@ -512,11 +515,12 @@ void InventoryChanger::onRoundMVP(GameEvent& event) noexcept
     if (!item || !item->isMusic())
         return;
 
-    auto& dynamicData = Inventory::dynamicMusicData(item->getDynamicDataIndex());
+    auto& dynamicData = Inventory::dynamicMusicData(*item);
     if (dynamicData.statTrak > -1) {
         ++dynamicData.statTrak;
         event.setInt("musickitmvps", dynamicData.statTrak);
-        soc->setStatTrak(dynamicData.statTrak);
+        EconItemAttributeSetter attributeSetter{ *memory->itemSystem()->getItemSchema() };
+        attributeSetter.setStatTrak(*soc, dynamicData.statTrak);
         localInventory->soUpdated(localInventory->getSOID(), (SharedObject*)soc, 4);
     }
 }
@@ -555,7 +559,7 @@ static ImTextureID getItemIconTexture(std::string_view iconpath) noexcept;
     if (item.isGraffiti())
         return storage.getGraffitiKit(item).name;
     if (item.isPatch())
-        return storage.getPatchKit(item).name;
+        return storage.getPatch(item).name;
 
     static constexpr game_items::ItemName fallback{ "", L"" };
     return fallback;

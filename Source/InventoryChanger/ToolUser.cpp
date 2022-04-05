@@ -9,6 +9,8 @@
 #include "ToolUser.h"
 
 #include "GameItems/Lookup.h"
+#include "Inventory/Item.h"
+#include "Inventory/Structs.h"
 
 static void initItemCustomizationNotification(std::string_view typeStr, std::uint64_t itemID) noexcept
 {
@@ -54,21 +56,22 @@ private:
 
         if (dest->isSkin()) {
             constexpr auto wearStep = 0.12f;
-            const auto newWear = (Inventory::dynamicSkinData(dest->getDynamicDataIndex()).stickers[stickerSlot].wear += wearStep);
+            const auto newWear = (Inventory::dynamicSkinData(*dest).stickers[stickerSlot].wear += wearStep);
 
             if (const auto shouldRemove = (newWear >= 1.0f + wearStep); shouldRemove) {
-                Inventory::dynamicSkinData(dest->getDynamicDataIndex()).stickers[stickerSlot] = {};
+                Inventory::dynamicSkinData(*dest).stickers[stickerSlot] = {};
                 initItemCustomizationNotification("sticker_remove", Inventory::recreateItem(destItemID));
             } else {
                 if (const auto view = memory->findOrCreateEconItemViewForItemID(destItemID)) {
                     if (const auto soc = memory->getSOCData(view)) {
-                        soc->setStickerWear(stickerSlot, newWear);
+                        EconItemAttributeSetter attributeSetter{ *memory->itemSystem()->getItemSchema() };
+                        attributeSetter.setStickerWear(*soc, stickerSlot, newWear);
                         localInventory.soUpdated(localInventory.getSOID(), (SharedObject*)soc, 4);
                     }
                 }
             }
         } else if (dest->isAgent()) {
-            Inventory::dynamicAgentData(dest->getDynamicDataIndex()).patches[stickerSlot] = {};
+            Inventory::dynamicAgentData(*dest).patches[stickerSlot] = {};
             initItemCustomizationNotification("patch_remove", Inventory::recreateItem(destItemID));
         }
     }
@@ -79,11 +82,11 @@ private:
         if (!dest || !dest->isSkin())
             return;
 
-        Inventory::dynamicSkinData(dest->getDynamicDataIndex()).nameTag.clear();
+        Inventory::dynamicSkinData(*dest).nameTag.clear();
         Inventory::recreateItem(destItemID);
     }
 
-    void _activateOperationPass(InventoryItem& pass) const noexcept
+    void _activateOperationPass(inventory::Item& pass) const noexcept
     {
         const auto passWeaponID = pass.get().getWeaponID();
         pass.markToDelete();
@@ -92,7 +95,7 @@ private:
             Inventory::addItemNow(*item, Inventory::InvalidDynamicDataIdx, true);
     }
 
-    void _activateViewerPass(InventoryItem& pass) const noexcept
+    void _activateViewerPass(inventory::Item& pass) const noexcept
     {
         const auto coinID = static_cast<WeaponId>(static_cast<int>(pass.get().getWeaponID()) + 1);
         pass.markToDelete();
@@ -100,17 +103,17 @@ private:
             initItemCustomizationNotification("ticket_activated", Inventory::addItemNow(*item, Inventory::InvalidDynamicDataIdx, false));
     }
 
-    void _unsealGraffiti(InventoryItem& sealedGraffiti) const noexcept
+    void _unsealGraffiti(inventory::Item& sealedGraffiti) const noexcept
     {
         if (const auto item = StaticData::lookup().findGraffiti(StaticData::lookup().getStorage().getGraffitiKit(sealedGraffiti.get()).id); item.has_value()) {
             sealedGraffiti.markToDelete();
-            DynamicGraffitiData dynamicData;
+            inventory::Graffiti dynamicData;
             dynamicData.usesLeft = 50;
             initItemCustomizationNotification("graffity_unseal", Inventory::addItemNow(*item, Inventory::emplaceDynamicData(std::move(dynamicData)), false));
         }
     }
 
-    void _openContainer(InventoryItem& container) const noexcept
+    void _openContainer(inventory::Item& container) const noexcept
     {
         assert(container.isCase());
         const auto& caseData = StaticData::getCase(container.get());
@@ -124,44 +127,44 @@ private:
         }
     }
 
-    void _applySticker(InventoryItem& sticker) const noexcept
+    void _applySticker(inventory::Item& sticker) const noexcept
     {
         assert(sticker.isSticker());
         const auto dest = Inventory::getItem(destItemID);
         if (!dest || !dest->isSkin())
             return;
 
-        Inventory::dynamicSkinData(dest->getDynamicDataIndex()).stickers[stickerSlot].stickerID = StaticData::lookup().getStorage().getStickerKit(sticker.get()).id;
-        Inventory::dynamicSkinData(dest->getDynamicDataIndex()).stickers[stickerSlot].wear = 0.0f;
+        Inventory::dynamicSkinData(*dest).stickers[stickerSlot].stickerID = StaticData::lookup().getStorage().getStickerKit(sticker.get()).id;
+        Inventory::dynamicSkinData(*dest).stickers[stickerSlot].wear = 0.0f;
         sticker.markToDelete();
         initItemCustomizationNotification("sticker_apply", Inventory::recreateItem(destItemID));
     }
 
-    void _addNameTag(InventoryItem& nameTagItem) const noexcept
+    void _addNameTag(inventory::Item& nameTagItem) const noexcept
     {
         assert(nameTagItem.isNameTag());
         const auto dest = Inventory::getItem(destItemID);
         if (!dest || !dest->isSkin())
             return;
 
-        Inventory::dynamicSkinData(dest->getDynamicDataIndex()).nameTag = nameTag;
+        Inventory::dynamicSkinData(*dest).nameTag = nameTag;
         nameTagItem.markToDelete();
         initItemCustomizationNotification("nametag_add", Inventory::recreateItem(destItemID));
     }
 
-    void _applyPatch(InventoryItem& patch) const noexcept
+    void _applyPatch(inventory::Item& patch) const noexcept
     {
         assert(patch.isPatch());
         const auto dest = Inventory::getItem(destItemID);
         if (!dest || !dest->isAgent())
             return;
 
-        Inventory::dynamicAgentData(dest->getDynamicDataIndex()).patches[stickerSlot].patchID = StaticData::lookup().getStorage().getPatchKit(patch.get()).id;
+        Inventory::dynamicAgentData(*dest).patches[stickerSlot].patchID = StaticData::lookup().getStorage().getPatch(patch.get()).id;
         patch.markToDelete();
         initItemCustomizationNotification("patch_apply", Inventory::recreateItem(destItemID));
     }
 
-    void _swapStatTrak(InventoryItem& statTrakSwapTool) const noexcept
+    void _swapStatTrak(inventory::Item& statTrakSwapTool) const noexcept
     {
         const auto item1 = Inventory::getItem(statTrakSwapItem1);
         if (!item1 || !item1->isSkin())
@@ -171,7 +174,7 @@ private:
         if (!item2 || !item2->isSkin())
             return;
 
-        std::swap(Inventory::dynamicSkinData(item1->getDynamicDataIndex()).statTrak, Inventory::dynamicSkinData(item2->getDynamicDataIndex()).statTrak);
+        std::swap(Inventory::dynamicSkinData(*item1).statTrak, Inventory::dynamicSkinData(*item2).statTrak);
         statTrakSwapTool.markToDelete();
 
         const auto recreatedItemID1 = Inventory::recreateItem(statTrakSwapItem1);
@@ -183,7 +186,7 @@ private:
         initItemCustomizationNotification("stattrack_swap", recreatedItemID2);
     }
 
-    void _activateSouvenirToken(InventoryItem& souvenirToken, CSPlayerInventory& localInventory) const noexcept
+    void _activateSouvenirToken(inventory::Item& souvenirToken, CSPlayerInventory& localInventory) const noexcept
     {
         assert(souvenirToken.isSouvenirToken());
 
@@ -192,12 +195,13 @@ private:
         if (it != inventory.cend()) {
             souvenirToken.markToDelete();
 
-            const auto newDropsAwarded = (++Inventory::dynamicTournamentCoinData(it->getDynamicDataIndex()).dropsAwarded);
+            const auto newDropsAwarded = (++Inventory::dynamicTournamentCoinData(*it).dropsAwarded);
             const auto coinItemID = std::distance(inventory.begin(), it) + Inventory::BASE_ITEMID;
 
             if (const auto view = memory->findOrCreateEconItemViewForItemID(coinItemID)) {
                 if (const auto soc = memory->getSOCData(view)) {
-                    soc->setDropsAwarded(newDropsAwarded);
+                    EconItemAttributeSetter attributeSetter{ *memory->itemSystem()->getItemSchema() };
+                    attributeSetter.setDropsAwarded(*soc, newDropsAwarded);
                     localInventory.soUpdated(localInventory.getSOID(), (SharedObject*)soc, 4);
                 }
             }

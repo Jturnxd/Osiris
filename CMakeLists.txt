@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.16.0)
 project(Osiris)
 
 if (NOT WIN32)
-  set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -fvisibility=hidden -fno-exceptions -Wfatal-errors")
+  set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -fno-exceptions -Wfatal-errors")
   set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -fno-rtti")
 endif()
 
@@ -15,30 +15,15 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} --no-gnu-unique")
 endif()
 
-file(GLOB_RECURSE SOURCES "${CMAKE_SOURCE_DIR}/Source/*.cpp")
+add_library(OsirisOBJ OBJECT "")
+set_target_properties(OsirisOBJ PROPERTIES CXX_VISIBILITY_PRESET hidden C_VISIBILITY_PRESET hidden)
+add_subdirectory(Dependencies)
+add_subdirectory(Source)
 
-if (NOT WIN32)
-  list(REMOVE_ITEM SOURCES "${CMAKE_SOURCE_DIR}/Source/Hooks/MinHook.cpp")
-else()
-  list(APPEND SOURCES "${CMAKE_SOURCE_DIR}/Source/MinHook/buffer.c")
-  list(APPEND SOURCES "${CMAKE_SOURCE_DIR}/Source/MinHook/hde/hde32.c")
-  list(APPEND SOURCES "${CMAKE_SOURCE_DIR}/Source/MinHook/hde/hde64.c")
-  list(APPEND SOURCES "${CMAKE_SOURCE_DIR}/Source/MinHook/hook.c")
-  list(APPEND SOURCES "${CMAKE_SOURCE_DIR}/Source/MinHook/trampoline.c")
-endif()
-
-list(REMOVE_ITEM SOURCES "${CMAKE_SOURCE_DIR}/Source/pch.cpp") 
-list(REMOVE_ITEM SOURCES "${CMAKE_SOURCE_DIR}/Source/Osiris.cpp")
-
-add_library(OsirisOBJ OBJECT ${SOURCES})
 set_target_properties(OsirisOBJ PROPERTIES POSITION_INDEPENDENT_CODE ON)
 target_precompile_headers(OsirisOBJ PRIVATE "${CMAKE_SOURCE_DIR}/Source/pch.h")
 target_include_directories(OsirisOBJ PUBLIC "${CMAKE_SOURCE_DIR}/Source")
 target_include_directories(OsirisOBJ PUBLIC "${CMAKE_SOURCE_DIR}/Dependencies")
-
-add_subdirectory(Source/freetype)
-add_subdirectory(Dependencies/imgui)
-target_link_libraries(OsirisOBJ PUBLIC imgui)
 
 if (NOT WIN32)
   target_link_libraries(OsirisOBJ PRIVATE ${CMAKE_DL_LIBS})
