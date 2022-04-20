@@ -4,15 +4,16 @@
 #include <ctime>
 #include <utility>
 
-#include "Inventory.h"
 #include "StaticData.h"
+
+#include "Inventory/Item.h"
 
 struct InventoryItem;
 
 namespace ItemGenerator
 {
-    std::pair<const game_items::Item&, std::size_t> generateItemFromContainer(const inventory::Item& caseItem) noexcept;
-    std::size_t createDefaultDynamicData(const game_items::Item& item) noexcept;
+    inventory::Item generateItemFromContainer(const inventory::Item& caseItem) noexcept;
+    inventory::StructWrapper createDefaultDynamicData(const game_items::Item& item) noexcept;
 }
 
 [[nodiscard]] std::time_t tmToUTCTimestamp(std::tm& tm) noexcept;

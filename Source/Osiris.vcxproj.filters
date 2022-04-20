@@ -45,6 +45,9 @@
     <Filter Include="InventoryChanger\Inventory">
       <UniqueIdentifier>{270217aa-a98f-429f-8f75-6afc8c109b1f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="InventoryChanger\Backend">
+      <UniqueIdentifier>{4d2a3734-8406-4a2b-8393-a5c4264a4e46}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="GUI.cpp">
@@ -152,12 +155,6 @@
     <ClCompile Include="InventoryChanger\StaticData.cpp">
       <Filter>InventoryChanger</Filter>
     </ClCompile>
-    <ClCompile Include="InventoryChanger\Inventory.cpp">
-      <Filter>InventoryChanger</Filter>
-    </ClCompile>
-    <ClCompile Include="InventoryChanger\ToolUser.cpp">
-      <Filter>InventoryChanger</Filter>
-    </ClCompile>
     <ClCompile Include="SDK\EconItemView.cpp">
       <Filter>SDK</Filter>
     </ClCompile>
@@ -262,6 +259,12 @@
     </ClCompile>
     <ClCompile Include="InventoryChanger\Inventory\StructsFromJson.cpp">
       <Filter>InventoryChanger\Inventory</Filter>
+    </ClCompile>
+    <ClCompile Include="InventoryChanger\Backend\ToolUser.cpp">
+      <Filter>InventoryChanger\Backend</Filter>
+    </ClCompile>
+    <ClCompile Include="InventoryChanger\BackendResponseHandler.cpp">
+      <Filter>InventoryChanger</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -541,14 +544,8 @@
     <ClInclude Include="InventoryChanger\StaticData.h">
       <Filter>InventoryChanger</Filter>
     </ClInclude>
-    <ClInclude Include="InventoryChanger\Inventory.h">
-      <Filter>InventoryChanger</Filter>
-    </ClInclude>
     <ClInclude Include="ProtobufReader.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="InventoryChanger\ToolUser.h">
-      <Filter>InventoryChanger</Filter>
     </ClInclude>
     <ClInclude Include="SDK\EconItemView.h">
       <Filter>SDK</Filter>
@@ -663,6 +660,33 @@
     </ClInclude>
     <ClInclude Include="InventoryChanger\Inventory\StructsFromJson.h">
       <Filter>InventoryChanger\Inventory</Filter>
+    </ClInclude>
+    <ClInclude Include="InventoryChanger\Backend\Loadout.h">
+      <Filter>InventoryChanger\Backend</Filter>
+    </ClInclude>
+    <ClInclude Include="InventoryChanger\Backend\BackendSimulator.h">
+      <Filter>InventoryChanger\Backend</Filter>
+    </ClInclude>
+    <ClInclude Include="InventoryChanger\Backend\ToolUser.h">
+      <Filter>InventoryChanger\Backend</Filter>
+    </ClInclude>
+    <ClInclude Include="InventoryChanger\Backend\Response.h">
+      <Filter>InventoryChanger\Backend</Filter>
+    </ClInclude>
+    <ClInclude Include="InventoryChanger\Backend\ItemIDMap.h">
+      <Filter>InventoryChanger\Backend</Filter>
+    </ClInclude>
+    <ClInclude Include="InventoryChanger\BackendResponseHandler.h">
+      <Filter>InventoryChanger</Filter>
+    </ClInclude>
+    <ClInclude Include="InventoryChanger\Backend\ResponseQueue.h">
+      <Filter>InventoryChanger\Backend</Filter>
+    </ClInclude>
+    <ClInclude Include="InventoryChanger\Backend\Item.h">
+      <Filter>InventoryChanger\Backend</Filter>
+    </ClInclude>
+    <ClInclude Include="InventoryChanger\Backend\ResponseTypes.h">
+      <Filter>InventoryChanger\Backend</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
