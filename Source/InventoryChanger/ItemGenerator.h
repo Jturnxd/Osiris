@@ -8,12 +8,10 @@
 
 #include "Inventory/Item.h"
 
-struct InventoryItem;
-
 namespace ItemGenerator
 {
     inventory::Item generateItemFromContainer(const inventory::Item& caseItem) noexcept;
-    inventory::StructWrapper createDefaultDynamicData(const game_items::Item& item) noexcept;
+    inventory::ItemData createDefaultDynamicData(const game_items::Item& item) noexcept;
 }
 
 [[nodiscard]] std::time_t tmToUTCTimestamp(std::tm& tm) noexcept;

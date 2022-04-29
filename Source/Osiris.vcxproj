@@ -130,7 +130,7 @@
     <ClCompile Include="imguiCustom.cpp" />
     <ClCompile Include="InputUtil.cpp" />
     <ClCompile Include="InventoryChanger\BackendResponseHandler.cpp" />
-    <ClCompile Include="InventoryChanger\Backend\ToolUser.cpp" />
+    <ClCompile Include="InventoryChanger\Backend\RequestHandler.cpp" />
     <ClCompile Include="InventoryChanger\GameItems\Storage.cpp" />
     <ClCompile Include="InventoryChanger\InventoryChanger.cpp" />
     <ClCompile Include="InventoryChanger\InventoryConfig.cpp" />
@@ -210,10 +210,11 @@
     <ClInclude Include="InventoryChanger\Backend\Item.h" />
     <ClInclude Include="InventoryChanger\Backend\ItemIDMap.h" />
     <ClInclude Include="InventoryChanger\Backend\Loadout.h" />
+    <ClInclude Include="InventoryChanger\Backend\RequestHandler.h" />
+    <ClInclude Include="InventoryChanger\Backend\RequestTypes.h" />
     <ClInclude Include="InventoryChanger\Backend\Response.h" />
     <ClInclude Include="InventoryChanger\Backend\ResponseQueue.h" />
     <ClInclude Include="InventoryChanger\Backend\ResponseTypes.h" />
-    <ClInclude Include="InventoryChanger\Backend\ToolUser.h" />
     <ClInclude Include="InventoryChanger\GameItems\Item.h" />
     <ClInclude Include="InventoryChanger\GameItems\Lookup.h" />
     <ClInclude Include="InventoryChanger\GameItems\Storage.h" />
@@ -236,6 +237,9 @@
     <ClInclude Include="SDK\AnimState.h" />
     <ClInclude Include="SDK\Client.h" />
     <ClInclude Include="SDK\ClientMode.h" />
+    <ClInclude Include="SDK\Constants\ClassId.h" />
+    <ClInclude Include="SDK\Constants\FrameStage.h" />
+    <ClInclude Include="SDK\Constants\UserMessages.h" />
     <ClInclude Include="SDK\ConVar.h" />
     <ClInclude Include="SDK\EconItemView.h" />
     <ClInclude Include="SDK\EngineTrace.h" />
@@ -244,13 +248,11 @@
     <ClInclude Include="SDK\EntityList.h" />
     <ClInclude Include="SDK\Cvar.h" />
     <ClInclude Include="SDK\Engine.h" />
-    <ClInclude Include="SDK\ClassId.h" />
     <ClInclude Include="GUI.h" />
     <ClInclude Include="Hooks.h" />
     <ClInclude Include="Interfaces.h" />
     <ClInclude Include="Memory.h" />
     <ClInclude Include="SDK\FileSystem.h" />
-    <ClInclude Include="SDK\FrameStage.h" />
     <ClInclude Include="SDK\GameEvent.h" />
     <ClInclude Include="SDK\GameMovement.h" />
     <ClInclude Include="SDK\GameUI.h" />
@@ -289,7 +291,6 @@
     <ClInclude Include="SDK\StudioRender.h" />
     <ClInclude Include="SDK\Surface.h" />
     <ClInclude Include="SDK\UserCmd.h" />
-    <ClInclude Include="SDK\UserMessages.h" />
     <ClInclude Include="SDK\UtlMap.h" />
     <ClInclude Include="SDK\UtlMemory.h" />
     <ClInclude Include="SDK\UtlString.h" />
@@ -302,6 +303,7 @@
     <ClInclude Include="SDK\WeaponId.h" />
     <ClInclude Include="SDK\WeaponData.h" />
     <ClInclude Include="SDK\WeaponSystem.h" />
+    <ClInclude Include="SmallVariant.h" />
     <ClInclude Include="Texture.h" />
   </ItemGroup>
   <ItemGroup>

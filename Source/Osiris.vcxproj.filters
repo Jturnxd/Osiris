@@ -48,6 +48,9 @@
     <Filter Include="InventoryChanger\Backend">
       <UniqueIdentifier>{4d2a3734-8406-4a2b-8393-a5c4264a4e46}</UniqueIdentifier>
     </Filter>
+    <Filter Include="SDK\Constants">
+      <UniqueIdentifier>{5c09d2f8-2275-47ed-b3e9-33887a01a723}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="GUI.cpp">
@@ -260,11 +263,11 @@
     <ClCompile Include="InventoryChanger\Inventory\StructsFromJson.cpp">
       <Filter>InventoryChanger\Inventory</Filter>
     </ClCompile>
-    <ClCompile Include="InventoryChanger\Backend\ToolUser.cpp">
-      <Filter>InventoryChanger\Backend</Filter>
-    </ClCompile>
     <ClCompile Include="InventoryChanger\BackendResponseHandler.cpp">
       <Filter>InventoryChanger</Filter>
+    </ClCompile>
+    <ClCompile Include="InventoryChanger\Backend\RequestHandler.cpp">
+      <Filter>InventoryChanger\Backend</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -337,9 +340,6 @@
     <ClInclude Include="SDK\Entity.h">
       <Filter>SDK</Filter>
     </ClInclude>
-    <ClInclude Include="SDK\ClassId.h">
-      <Filter>SDK</Filter>
-    </ClInclude>
     <ClInclude Include="SDK\EntityList.h">
       <Filter>SDK</Filter>
     </ClInclude>
@@ -380,9 +380,6 @@
       <Filter>SDK</Filter>
     </ClInclude>
     <ClInclude Include="SDK\GameUI.h">
-      <Filter>SDK</Filter>
-    </ClInclude>
-    <ClInclude Include="SDK\FrameStage.h">
       <Filter>SDK</Filter>
     </ClInclude>
     <ClInclude Include="Hacks\Backtrack.h">
@@ -553,9 +550,6 @@
     <ClInclude Include="SDK\PlantedC4.h">
       <Filter>SDK</Filter>
     </ClInclude>
-    <ClInclude Include="SDK\UserMessages.h">
-      <Filter>SDK</Filter>
-    </ClInclude>
     <ClInclude Include="SDK\UtlMap.h">
       <Filter>SDK</Filter>
     </ClInclude>
@@ -667,9 +661,6 @@
     <ClInclude Include="InventoryChanger\Backend\BackendSimulator.h">
       <Filter>InventoryChanger\Backend</Filter>
     </ClInclude>
-    <ClInclude Include="InventoryChanger\Backend\ToolUser.h">
-      <Filter>InventoryChanger\Backend</Filter>
-    </ClInclude>
     <ClInclude Include="InventoryChanger\Backend\Response.h">
       <Filter>InventoryChanger\Backend</Filter>
     </ClInclude>
@@ -687,6 +678,24 @@
     </ClInclude>
     <ClInclude Include="InventoryChanger\Backend\ResponseTypes.h">
       <Filter>InventoryChanger\Backend</Filter>
+    </ClInclude>
+    <ClInclude Include="InventoryChanger\Backend\RequestTypes.h">
+      <Filter>InventoryChanger\Backend</Filter>
+    </ClInclude>
+    <ClInclude Include="InventoryChanger\Backend\RequestHandler.h">
+      <Filter>InventoryChanger\Backend</Filter>
+    </ClInclude>
+    <ClInclude Include="SDK\Constants\ClassId.h">
+      <Filter>SDK\Constants</Filter>
+    </ClInclude>
+    <ClInclude Include="SDK\Constants\FrameStage.h">
+      <Filter>SDK\Constants</Filter>
+    </ClInclude>
+    <ClInclude Include="SDK\Constants\UserMessages.h">
+      <Filter>SDK\Constants</Filter>
+    </ClInclude>
+    <ClInclude Include="SmallVariant.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

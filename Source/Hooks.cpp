@@ -50,7 +50,7 @@
 #include "SDK/Engine.h"
 #include "SDK/Entity.h"
 #include "SDK/EntityList.h"
-#include "SDK/FrameStage.h"
+#include "SDK/Constants/FrameStage.h"
 #include "SDK/GameEvent.h"
 #include "SDK/GameUI.h"
 #include "SDK/GlobalVars.h"
@@ -66,7 +66,7 @@
 #include "SDK/StudioRender.h"
 #include "SDK/Surface.h"
 #include "SDK/UserCmd.h"
-#include "SDK/UserMessages.h"
+#include "SDK/Constants/UserMessages.h"
 
 #ifdef _WIN32
 

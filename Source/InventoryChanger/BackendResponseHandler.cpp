@@ -235,6 +235,7 @@ void removeSticker(std::uint64_t itemID, std::uint8_t slot)
 
     EconItemAttributeSetter attributeSetter{ *memory->itemSystem()->getItemSchema() };
     attributeSetter.setStickerID(*econItem, slot, 0);
+    attributeSetter.setStickerWear(*econItem, slot, 0.0f);
     localInventory->soUpdated(localInventory->getSOID(), (SharedObject*)econItem, 4);
 }
 
@@ -486,8 +487,10 @@ void BackendResponseHandler::operator()(const backend::response::PatchApplied& r
 
 void BackendResponseHandler::operator()(const backend::response::PatchRemoved& response) const
 {
-    if (const auto itemID = backend.getItemID(response.agentItem); itemID.has_value())
+    if (const auto itemID = backend.getItemID(response.agentItem); itemID.has_value()) {
         removePatch(*itemID, response.patchSlot);
+        initItemCustomizationNotification("patch_remove", *itemID);
+    }
 }
 
 void BackendResponseHandler::operator()(const backend::response::SouvenirTokenActivated& response) const
@@ -518,23 +521,23 @@ void BackendResponseHandler::operator()(const backend::response::StatTrakSwapped
     if (!destinationItemID.has_value())
         return;
 
-    const auto sourceSkin = response.swapSourceItem->get<inventory::Skin>();
-    if (!sourceSkin)
+    const auto sourceStatTrak = inventory::getStatTrak(*response.swapSourceItem);
+    if (!sourceStatTrak)
         return;
 
-    const auto destinationSkin = response.swapDestinationItem->get<inventory::Skin>();
-    if (!destinationSkin)
+    const auto destinationStatTrak = inventory::getStatTrak(*response.swapDestinationItem);
+    if (!destinationStatTrak)
         return;
 
-    updateStatTrak(*sourceItemID, sourceSkin->statTrak);
-    updateStatTrak(*destinationItemID, destinationSkin->statTrak);
+    updateStatTrak(*sourceItemID, *sourceStatTrak);
+    updateStatTrak(*destinationItemID, *destinationStatTrak);
 
     if (const auto inventoryComponent = *memory->uiComponentInventory) {
         memory->setItemSessionPropertyValue(inventoryComponent, *sourceItemID, "updated", "1");
         memory->setItemSessionPropertyValue(inventoryComponent, *destinationItemID, "updated", "1");
     }
 
-    initItemCustomizationNotification("stattrack_swap", *destinationItemID);
+    initItemCustomizationNotification("stattrack_swap", *sourceStatTrak > *destinationStatTrak ? *sourceItemID : *destinationItemID);
 }
 
 }
