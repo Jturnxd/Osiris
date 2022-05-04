@@ -212,10 +212,12 @@
     <ClInclude Include="InventoryChanger\Backend\Loadout.h" />
     <ClInclude Include="InventoryChanger\Backend\RequestHandler.h" />
     <ClInclude Include="InventoryChanger\Backend\RequestTypes.h" />
-    <ClInclude Include="InventoryChanger\Backend\Response.h" />
-    <ClInclude Include="InventoryChanger\Backend\ResponseQueue.h" />
-    <ClInclude Include="InventoryChanger\Backend\ResponseTypes.h" />
+    <ClInclude Include="InventoryChanger\Backend\Response\ItemInResponse.h" />
+    <ClInclude Include="InventoryChanger\Backend\Response\Response.h" />
+    <ClInclude Include="InventoryChanger\Backend\Response\ResponseQueue.h" />
+    <ClInclude Include="InventoryChanger\Backend\Response\ResponseTypes.h" />
     <ClInclude Include="InventoryChanger\GameItems\Item.h" />
+    <ClInclude Include="InventoryChanger\GameItems\ItemSorter.h" />
     <ClInclude Include="InventoryChanger\GameItems\Lookup.h" />
     <ClInclude Include="InventoryChanger\GameItems\Storage.h" />
     <ClInclude Include="InventoryChanger\GameItems\Structs.h" />
@@ -355,12 +357,12 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(SolutionDir)Dependencies\freetype;$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)Dependencies;$(ProjectDir)</IncludePath>
+    <IncludePath>$(SolutionDir)Dependencies\freetype;$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)Dependencies\range-v3;$(SolutionDir)Dependencies;$(ProjectDir)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <GenerateManifest>false</GenerateManifest>
-    <IncludePath>$(SolutionDir)Dependencies\freetype;$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)Dependencies;$(ProjectDir)</IncludePath>
+    <IncludePath>$(SolutionDir)Dependencies\freetype;$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)Dependencies\range-v3;$(SolutionDir)Dependencies;$(ProjectDir)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -368,7 +370,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>false</SDLCheck>
-      <PreprocessorDefinitions>FT2_BUILD_LIBRARY;_CRT_SECURE_NO_WARNINGS;_USE_MATH_DEFINES;WIN32_LEAN_AND_MEAN;WINVER=0x0601;_WIN32_WINNT=0x0601;WIN32;_DEBUG;OSIRIS_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>FT2_BUILD_LIBRARY;NOMINMAX;_CRT_SECURE_NO_WARNINGS;_USE_MATH_DEFINES;WIN32_LEAN_AND_MEAN;WINVER=0x0601;_WIN32_WINNT=0x0601;WIN32;_DEBUG;OSIRIS_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -396,7 +398,7 @@
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>FT2_BUILD_LIBRARY;_HAS_EXCEPTIONS=0;_CRT_SECURE_NO_WARNINGS;_USE_MATH_DEFINES;WIN32_LEAN_AND_MEAN;WINVER=0x0601;_WIN32_WINNT=0x0601;WIN32;NDEBUG;OSIRIS_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>FT2_BUILD_LIBRARY;NOMINMAX;_HAS_EXCEPTIONS=0;_CRT_SECURE_NO_WARNINGS;_USE_MATH_DEFINES;WIN32_LEAN_AND_MEAN;WINVER=0x0601;_WIN32_WINNT=0x0601;WIN32;NDEBUG;OSIRIS_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <DebugInformationFormat>None</DebugInformationFormat>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>

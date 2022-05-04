@@ -24,16 +24,6 @@ namespace game_items
 
 namespace StaticData
 {
-    struct ItemIndex2 {
-        explicit ItemIndex2(std::size_t value) : value{ value } {}
-        ItemIndex2() = default;
-        friend bool operator==(const ItemIndex2& a, const ItemIndex2& b) = default;
-
-        std::size_t value = static_cast<std::size_t>(-1);
-    };
-
-    constexpr auto InvalidItemIdx2 = ItemIndex2{};
-
     enum class TournamentMap : std::uint8_t {
         None = 0,
         Ancient,
@@ -101,11 +91,9 @@ namespace StaticData
     [[nodiscard]] std::size_t getGameItemsCount() noexcept;
     [[nodiscard]] std::span<const std::reference_wrapper<const game_items::Item>> getCrateLoot(const Case& crate) noexcept;
     [[nodiscard]] std::span<const std::reference_wrapper<const game_items::Item>> getCrateLootOfRarity(const Case& crate, EconRarity rarity) noexcept;
-    [[nodiscard]] std::vector<ItemIndex2> getItemIndices() noexcept;
 
     [[nodiscard]] const Case& getCase(const game_items::Item& item) noexcept;
     [[nodiscard]] bool isSouvenirPackage(const game_items::Item& crate) noexcept;
-    [[nodiscard]] const game_items::Item& getGameItem(ItemIndex2 itemIndex) noexcept;
 
     std::wstring_view getWeaponNameUpper(WeaponId weaponID) noexcept;
     std::string_view getWeaponName(WeaponId weaponID) noexcept;
@@ -139,11 +127,3 @@ namespace StaticData
         return TournamentMap::None;
     }
 }
-
-template <>
-struct std::hash<StaticData::ItemIndex2> {
-    std::size_t operator()(StaticData::ItemIndex2 s) const noexcept
-    {
-        return std::hash<std::size_t>{}(s.value);
-    }
-};

@@ -6,6 +6,8 @@
 #include <unordered_map>
 #include <utility>
 
+#include <range/v3/algorithm/equal_range.hpp>
+
 #include "StaticData.h"
 
 #include "../Helpers.h"
@@ -377,23 +379,7 @@ std::span<const std::reference_wrapper<const game_items::Item>> StaticData::getC
 
 std::span<const std::reference_wrapper<const game_items::Item>> StaticData::getCrateLootOfRarity(const StaticData::Case& crate, EconRarity rarity) noexcept
 {
-    struct Comp {
-        bool operator()(EconRarity rarity, const game_items::Item& item) const noexcept { return rarity < item.getRarity(); }
-        bool operator()(const game_items::Item& item, EconRarity rarity) const noexcept { return item.getRarity() < rarity; }
-    };
-
-    const auto loot = getCrateLoot(crate);
-    const auto [begin, end] = std::equal_range(loot.begin(), loot.end(), rarity, Comp{});
-    return { begin, end };
-}
-
-std::vector<StaticData::ItemIndex2> StaticData::getItemIndices() noexcept
-{
-    const auto itemIndexCount = StaticDataImpl::gameItems().size();
-    std::vector<StaticData::ItemIndex2> indices(itemIndexCount);
-    for (std::size_t i = 0; i < itemIndexCount; ++i)
-        indices[i] = StaticData::ItemIndex2{ i };
-    return indices;
+    return ranges::equal_range(getCrateLoot(crate), rarity, {}, &game_items::Item::getRarity);
 }
 
 const StaticData::Case& StaticData::getCase(const game_items::Item& item) noexcept
@@ -409,11 +395,6 @@ bool StaticData::isSouvenirPackage(const game_items::Item& crate) noexcept
         return false;
     const auto loot = getCrateLoot(crateData);
     return !loot.empty() && loot[0].get().isSkin();
-}
-
-const game_items::Item& StaticData::getGameItem(ItemIndex2 itemIndex) noexcept
-{
-    return StaticDataImpl::gameItems()[itemIndex.value];
 }
 
 std::wstring_view StaticData::getWeaponNameUpper(WeaponId weaponID) noexcept

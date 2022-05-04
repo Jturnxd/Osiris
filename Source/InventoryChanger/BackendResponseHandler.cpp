@@ -403,7 +403,16 @@ void BackendResponseHandler::operator()(const backend::response::ItemAdded& resp
 
 void BackendResponseHandler::operator()(const backend::response::ItemMovedToFront& response) const
 {
-    backend.updateItemID(response.itemID, assingNewItemID(response.itemID));
+    if (const auto itemID = backend.getItemID(response.item); itemID.has_value())
+        backend.updateItemID(*itemID, assingNewItemID(*itemID));
+}
+
+void BackendResponseHandler::operator()(const backend::response::ItemUpdated& response) const
+{
+    if (const auto itemID = backend.getItemID(response.item); itemID.has_value()) {
+        if (const auto inventoryComponent = *memory->uiComponentInventory)
+            memory->setItemSessionPropertyValue(inventoryComponent, *itemID, "updated", "1");
+    }
 }
 
 void BackendResponseHandler::operator()(const backend::response::ItemEquipped& response) const
@@ -533,8 +542,7 @@ void BackendResponseHandler::operator()(const backend::response::StatTrakSwapped
     updateStatTrak(*destinationItemID, *destinationStatTrak);
 
     if (const auto inventoryComponent = *memory->uiComponentInventory) {
-        memory->setItemSessionPropertyValue(inventoryComponent, *sourceItemID, "updated", "1");
-        memory->setItemSessionPropertyValue(inventoryComponent, *destinationItemID, "updated", "1");
+        memory->setItemSessionPropertyValue(inventoryComponent, *destinationStatTrak >= *sourceStatTrak ? *sourceItemID : *destinationItemID, "updated", "1");
     }
 
     initItemCustomizationNotification("stattrack_swap", *sourceStatTrak > *destinationStatTrak ? *sourceItemID : *destinationItemID);

@@ -8,8 +8,8 @@
 #include "ItemIDMap.h"
 #include "Loadout.h"
 #include "RequestHandler.h"
-#include "Response.h"
-#include "ResponseQueue.h"
+#include "Response/Response.h"
+#include "Response/ResponseQueue.h"
 
 #include <InventoryChanger/StaticData.h>
 
@@ -89,6 +89,7 @@ public:
     {
         const auto itemID = itemIDMap.remove(it);
         loadout.unequipItem(it);
+        responseQueue.removeResponsesReferencingItem(it);
         const auto newIterator = inventory.erase(it);
         if (itemID.has_value())
             responseQueue.add(response::ItemRemoved{ *itemID });
@@ -98,8 +99,7 @@ public:
     void moveToFront(ItemConstIterator it)
     {
         inventory.splice(inventory.end(), inventory, it);
-        if (const auto itemID = getItemID(it); itemID.has_value())
-            responseQueue.add(response::ItemMovedToFront{ *itemID });
+        responseQueue.add(response::ItemMovedToFront{ it });
     }
 
     void assignItemID(ItemConstIterator it, std::uint64_t itemID)
