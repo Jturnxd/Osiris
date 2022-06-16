@@ -69,11 +69,8 @@ function load_debug {
 
 function build {
     echo "Building cheat..."
-    mkdir -p build
-    cd build
-    cmake -D CMAKE_BUILD_TYPE=Release ..
+    cmake .
     make -j $(nproc --all)
-    cd ..
 }
 
 function build_debug {
