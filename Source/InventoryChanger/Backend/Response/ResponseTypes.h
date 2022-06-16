@@ -16,17 +16,17 @@ struct ItemAdded {
     bool asUnacknowledged;
 };
 
-struct ItemMovedToFront {
-    explicit ItemMovedToFront(ItemConstIterator item) : item{ item } {}
+template <typename Tag>
+struct ItemModified {
+    explicit ItemModified(ItemConstIterator item) : item{ item } {}
 
     ItemConstIterator item;
 };
 
-struct ItemUpdated {
-    explicit ItemUpdated(ItemConstIterator item) : item{ item } {}
-
-    ItemConstIterator item;
-};
+using ItemMovedToFront = ItemModified<struct ItemMovedToFrontTag>;
+using ItemUpdated = ItemModified<struct ItemUpdatedTag>;
+using ItemHidden = ItemModified<struct ItemHiddenTag>;
+using ItemUnhidden = ItemModified<struct ItemUnhiddenTag>;
 
 struct ItemEquipped {
     ItemEquipped(ItemConstIterator item, std::uint8_t slot, Team team) : item{ item }, slot{ slot }, team{ team } {}
@@ -55,9 +55,9 @@ using StickerScraped = StickerModified<struct StickerScrapedTag>;
 using StickerRemoved = StickerModified<struct StickerRemovedTag>;
 
 struct StatTrakUpdated {
-    StatTrakUpdated(std::uint64_t itemID, int newStatTrakValue) : itemID{ itemID }, newStatTrakValue{ newStatTrakValue } {}
+    StatTrakUpdated(ItemConstIterator item, int newStatTrakValue) : item{ item }, newStatTrakValue{ newStatTrakValue } {}
 
-    std::uint64_t itemID;
+    ItemConstIterator item;
     int newStatTrakValue;
 };
 
@@ -107,10 +107,31 @@ struct GraffitiUnsealed {
 };
 
 struct StatTrakSwapped {
-    StatTrakSwapped(ItemConstIterator swapSourceItem, ItemConstIterator swapDestinationItem) : swapSourceItem{ swapSourceItem }, swapDestinationItem{ swapDestinationItem } {}
+    explicit StatTrakSwapped(ItemConstIterator itemWithHigherStatTrakAfterSwap)
+        : itemWithHigherStatTrakAfterSwap{ itemWithHigherStatTrakAfterSwap } {}
 
-    ItemConstIterator swapSourceItem;
-    ItemConstIterator swapDestinationItem;
+    ItemConstIterator itemWithHigherStatTrakAfterSwap;
+};
+
+struct TeamGraffitiSelected {
+    TeamGraffitiSelected(ItemConstIterator tournamentCoin, std::uint16_t graffitiID) : tournamentCoin{ tournamentCoin }, graffitiID{ graffitiID } {}
+
+    ItemConstIterator tournamentCoin;
+    std::uint16_t graffitiID;
+};
+
+struct PickEmUpdated {};
+
+struct XRayScannerUsed {
+    explicit XRayScannerUsed(ItemConstIterator receivedItem) : receivedItem{ receivedItem } {}
+
+    ItemConstIterator receivedItem;
+};
+
+struct XRayItemClaimed {
+    explicit XRayItemClaimed(ItemConstIterator item) : item{ item } {}
+
+    ItemConstIterator item;
 };
 
 }
