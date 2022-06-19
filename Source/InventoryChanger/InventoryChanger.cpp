@@ -1112,7 +1112,7 @@ void InventoryChanger::onRoundMVP(GameEvent& event)
 
     if (music->statTrak > -1) {
         event.setInt("musickitmvps", music->statTrak + 1);
-        backend.request<backend::request::UpdateStatTrak>(item, music->statTrak + 1);
+        backend.getRequestor().request<backend::request::UpdateStatTrak>(item, music->statTrak + 1);
     }
 }
 
@@ -1140,7 +1140,7 @@ void InventoryChanger::updateStatTrak(GameEvent& event)
         return;
 
     if (skin->statTrak > -1)
-        backend.request<backend::request::UpdateStatTrak>(item, skin->statTrak + 1);
+        backend.getRequestor().request<backend::request::UpdateStatTrak>(item, skin->statTrak + 1);
 }
 
 void InventoryChanger::overrideHudIcon(GameEvent& event)
@@ -1196,7 +1196,7 @@ void InventoryChanger::getArgAsStringHook(const char* string, std::uintptr_t ret
             const auto attribute = hooks->panoramaMarshallHelper.callOriginal<const char*, 7>(params, 1);
             if (attribute && std::strcmp(attribute, "sticker slot 0 id") == 0) {
                 const auto graffitiID = (int)hooks->panoramaMarshallHelper.callOriginal<double, 5>(params, 2);
-                backend.request<backend::request::SelectTeamGraffiti>(*itOptional, static_cast<std::uint16_t>(graffitiID));
+                backend.getRequestor().request<backend::request::SelectTeamGraffiti>(*itOptional, static_cast<std::uint16_t>(graffitiID));
             }
         }
     } else if (returnAddress == memory->getMyPredictionTeamIDGetArgAsStringReturnAddress) {
@@ -1292,10 +1292,9 @@ void InventoryChanger::onUserTextMsg(const void*& data, int& size)
         if (!def)
             return;
 
-        static std::vector<char> buffer;
-        buffer = buildTextUserMessage(HUD_PRINTCENTER, strings[0], def->getItemBaseName());
-        data = buffer.data();
-        size = static_cast<int>(buffer.size());
+        userTextMsgBuffer = buildTextUserMessage(HUD_PRINTCENTER, strings[0], def->getItemBaseName());
+        data = userTextMsgBuffer.data();
+        size = static_cast<int>(userTextMsgBuffer.size());
     } else if (reader.readInt32(1) == HUD_PRINTTALK) {
         const auto strings = reader.readRepeatedString(3);
         if (strings.size() < 3)
@@ -1315,10 +1314,9 @@ void InventoryChanger::onUserTextMsg(const void*& data, int& size)
         if (!def)
             return;
 
-        static std::vector<char> buffer;
-        buffer = buildTextUserMessage(HUD_PRINTTALK, strings[0], strings[1], def->getItemBaseName());
-        data = buffer.data();
-        size = static_cast<int>(buffer.size());
+        userTextMsgBuffer = buildTextUserMessage(HUD_PRINTTALK, strings[0], strings[1], def->getItemBaseName());
+        data = userTextMsgBuffer.data();
+        size = static_cast<int>(userTextMsgBuffer.size());
     }
 }
 
@@ -1356,7 +1354,7 @@ void InventoryChanger::acknowledgeItem(std::uint64_t itemID)
 
     if (const auto view = memory->findOrCreateEconItemViewForItemID(itemID)) {
         if (const auto soc = memory->getSOCData(view)) {
-            soc->inventory = localInventory->getHighestIDs().second;
+            soc->inventory = localInventory->getHighestIDs().second + 1;
             localInventory->soUpdated(localInventory->getSOID(), (SharedObject*)soc, 4);
         }
     }
