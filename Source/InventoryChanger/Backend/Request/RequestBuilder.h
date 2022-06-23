@@ -3,8 +3,10 @@
 #include <cstdint>
 #include <string_view>
 
-#include <InventoryChanger/Backend/BackendSimulator.h>
+#include <InventoryChanger/Backend/ItemIDMap.h>
 #include <InventoryChanger/GameItems/Lookup.h>
+
+#include "RequestTypes.h"
 
 namespace inventory_changer::backend
 {
@@ -12,7 +14,7 @@ namespace inventory_changer::backend
 template <typename Requestor>
 class RequestBuilder {
 public:
-    explicit RequestBuilder(BackendSimulator& backend, Requestor requestor) : backend{ backend }, requestor{ requestor } {}
+    explicit RequestBuilder(const ItemIDMap& itemIDMap, Requestor requestor) : itemIDMap{ itemIDMap }, requestor{ requestor } {}
 
     void setStickerSlot(std::uint8_t slot) noexcept
     {
@@ -32,8 +34,8 @@ public:
 
     void useToolOn(std::uint64_t toolItemID, std::uint64_t destItemID)
     {
-        const auto toolItem = backend.itemFromID(toolItemID);
-        const auto destItem = backend.itemFromID(destItemID);
+        const auto toolItem = itemIDMap.get(toolItemID);
+        const auto destItem = itemIDMap.get(destItemID);
 
         if (toolItem.has_value() && destItem.has_value()) {
             useToolOnItem(*toolItem, *destItem);
@@ -46,7 +48,7 @@ public:
 
     void wearStickerOf(std::uint64_t itemID, std::uint8_t slot)
     {
-        const auto item = backend.itemFromID(itemID);
+        const auto item = itemIDMap.get(itemID);
         if (!item.has_value())
             return;
 
@@ -58,23 +60,11 @@ public:
 
     void removeNameTagFrom(std::uint64_t itemID)
     {
-        const auto item = backend.itemFromID(itemID);
+        const auto item = itemIDMap.get(itemID);
         if (!item.has_value())
             return;
 
         request<request::RemoveNameTag>(*item);
-    }
-
-    void placePickEmPick(std::uint16_t group, std::uint8_t indexInGroup, int stickerID)
-    {
-        const auto& gameItemLookup = backend.getGameItemLookup();
-
-        const auto sticker = gameItemLookup.findSticker(stickerID);
-        if (!sticker || !sticker->get().isSticker())
-            return;
-
-        const auto tournamentTeam = gameItemLookup.getStorage().getStickerKit(*sticker).tournamentTeam;
-        request<request::PickStickerPickEm>(PickEm::PickPosition{ 19, group, indexInGroup }, tournamentTeam);
     }
 
 private:
@@ -99,8 +89,8 @@ private:
     void useTool(backend::ItemIterator tool)
     {
         if (tool->gameItem().isStatTrakSwapTool()) {
-            const auto statTrakSwapItem1 = backend.itemFromID(statTrakSwapItemID1);
-            const auto statTrakSwapItem2 = backend.itemFromID(statTrakSwapItemID2);
+            const auto statTrakSwapItem1 = itemIDMap.get(statTrakSwapItemID1);
+            const auto statTrakSwapItem2 = itemIDMap.get(statTrakSwapItemID2);
 
             if (statTrakSwapItem1.has_value() && statTrakSwapItem2.has_value())
                 request<request::SwapStatTrak>(*statTrakSwapItem1, *statTrakSwapItem2, tool);
@@ -131,7 +121,7 @@ private:
         requestor.template request<RequestType>(std::forward<Args>(args)...);
     }
 
-    BackendSimulator& backend;
+    const ItemIDMap& itemIDMap;
     Requestor requestor;
     std::uint8_t stickerSlot = 0;
     std::uint64_t statTrakSwapItemID1 = 0;

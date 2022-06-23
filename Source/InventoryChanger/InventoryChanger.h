@@ -1,9 +1,8 @@
 #pragma once
 
 #include <cstdint>
+#include <utility>
 #include <vector>
-
-#include "InventoryConfig.h"
 
 #include "Backend/BackendSimulator.h"
 #include "Backend/Request/RequestBuilder.h"
@@ -22,7 +21,7 @@ namespace inventory_changer
 class InventoryChanger {
 public:
     InventoryChanger(game_items::Lookup gameItemLookup, game_items::CrateLootLookup crateLootLookup)
-        : gameItemLookup{ std::move(gameItemLookup) }, crateLootLookup{ std::move(crateLootLookup) }, backend{ this->gameItemLookup, this->crateLootLookup }, backendRequestBuilder{ backend, backend.getRequestor() } {}
+        : gameItemLookup{ std::move(gameItemLookup) }, crateLootLookup{ std::move(crateLootLookup) }, backend{ this->gameItemLookup, this->crateLootLookup }, backendRequestBuilder{ backend.getItemIDMap(), backend.getRequestor() } {}
 
     static InventoryChanger& instance();
 
@@ -61,6 +60,8 @@ public:
     void reset();
 
 private:
+    void placePickEmPick(std::uint16_t group, std::uint8_t indexInGroup, int stickerID);
+
     game_items::Lookup gameItemLookup;
     game_items::CrateLootLookup crateLootLookup;
     backend::BackendSimulator backend;
