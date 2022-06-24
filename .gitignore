@@ -338,3 +338,4 @@ CMakeFiles/
 libOsiris.so
 CMakeCache.txt
 **/*.cmake
+**/CMakeFiles/
