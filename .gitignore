@@ -332,3 +332,9 @@ ASALocalRun/
 
 # Local History for Visual Studio
 .localhistory/
+
+# build files
+CMakeFiles/
+libOsiris.so
+CMakeCache.txt
+**/*.cmake
