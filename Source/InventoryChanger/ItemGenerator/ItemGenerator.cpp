@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <array>
+#include <chrono>
 #include <cmath>
 #include <ctime>
 #include <random>
@@ -16,10 +17,9 @@
 #include <InventoryChanger/Inventory/Structs.h>
 #include <InventoryChanger/GameIntegration/Misc.h>
 
+#include "AttributeGenerator.h"
 #include "DefaultGenerator.h"
 #include "Utils.h"
-
-[[nodiscard]] static std::array<inventory_changer::inventory::Skin::Sticker, 5> generateSouvenirStickers(const inventory_changer::game_items::Lookup& gameItemLookup, WeaponId weaponID, std::uint32_t tournamentID, inventory_changer::TournamentMap map, TournamentTeam team1, TournamentTeam team2, csgo::ProPlayer player) noexcept;
 
 template <typename Integral, std::size_t N>
 [[nodiscard]] constexpr auto normalizedFloatsToIntegers(const std::array<float, N>& floats) noexcept
@@ -865,77 +865,12 @@ namespace inventory_changer::item_generator
 
 [[nodiscard]] std::time_t getEndOfYearTimestamp(std::uint16_t year) noexcept
 {
-    assert(year >= 1900);
-    std::tm tm{};
-    tm.tm_sec = 59;
-    tm.tm_min = 59;
-    tm.tm_hour = 23;
-    tm.tm_mday = 31;
-    tm.tm_mon = 12 - 1;
-    tm.tm_year = year - 1900;
-    return tmToUTCTimestamp(tm);
+    using namespace std::chrono;
+    return system_clock::to_time_t(sys_days(31d / December / year) + 23h + 59min + 59s);
 }
 
 namespace inventory_changer::item_generator
 {
-
-[[nodiscard]] inventory::Skin generateSkin(const game_items::Lookup& gameItemLookup, const game_items::Item& unlockedItem, const inventory::Item& caseItem)
-{
-    inventory::Skin skin;
-    const auto& paintKit = gameItemLookup.getStorage().getPaintKit(unlockedItem);
-    skin.wear = std::lerp(paintKit.wearRemapMin, paintKit.wearRemapMax, generateWear());
-    skin.seed = randomSeed();
-
-    if (const auto souvenirPackage = caseItem.get<inventory::SouvenirPackage>()) {
-        skin.tournamentID = gameItemLookup.getStorage().getTournamentEventID(caseItem.gameItem());
-        skin.tournamentStage = souvenirPackage->tournamentStage;
-        skin.tournamentTeam1 = souvenirPackage->tournamentTeam1;
-        skin.tournamentTeam2 = souvenirPackage->tournamentTeam2;
-        skin.proPlayer = souvenirPackage->proPlayer;
-        skin.stickers = generateSouvenirStickers(gameItemLookup, unlockedItem.getWeaponID(), gameItemLookup.getStorage().getTournamentEventID(caseItem.gameItem()), gameItemLookup.getStorage().getTournamentMap(caseItem.gameItem()), skin.tournamentTeam1, skin.tournamentTeam2, skin.proPlayer);
-    } else if (Helpers::random(0, 9) == 0) {
-        skin.statTrak = 0;
-    }
-
-    return skin;
-}
-
-[[nodiscard]] inventory::ItemData generateItemData(const game_items::Lookup& gameItemLookup, const game_items::Item& unlockedItem, const inventory::Item& caseItem, bool willProduceStatTrak)
-{
-    if (willProduceStatTrak && unlockedItem.isMusic()) {
-        return inventory::Music{ .statTrak = 0 };
-    } else if (unlockedItem.isSkin()) {
-        return generateSkin(gameItemLookup, unlockedItem, caseItem);
-    } else if (unlockedItem.isGloves()) {
-        const auto& paintKit = gameItemLookup.getStorage().getPaintKit(unlockedItem);
-
-        return inventory::Glove{
-            .wear = std::lerp(paintKit.wearRemapMin, paintKit.wearRemapMax, generateWear()),
-            .seed = randomSeed()
-        };
-    }
-    return {};
-}
-
-std::optional<inventory::Item> generateItemFromContainer(const game_items::Lookup& gameItemLookup, const game_items::CrateLootLookup& crateLootLookup, const inventory::Item& caseItem) noexcept
-{
-    assert(caseItem.gameItem().isCase());
-
-    const auto crateSeries = gameItemLookup.getStorage().getCrateSeries(caseItem.gameItem());
-    const auto lootList = crateLootLookup.findLootList(crateSeries);
-    if (!lootList)
-        return std::nullopt;
-
-    const auto& unlockedItem = getRandomItemIndexFromContainer(gameItemLookup, crateLootLookup, caseItem.gameItem().getWeaponID(), *lootList);
-    return inventory::Item{ unlockedItem, generateItemData(gameItemLookup, unlockedItem, caseItem, lootList->willProduceStatTrak) };
-}
-
-inventory::ItemData createDefaultDynamicData(const game_items::Storage& gameItemStorage, const game_items::Item& item) noexcept
-{
-    return DefaultGenerator{ gameItemStorage }.createItemData(item);
-}
-
-}
 
 [[nodiscard]] static std::uint8_t getNumberOfSupportedStickerSlots(WeaponId weaponID) noexcept
 {
@@ -944,24 +879,98 @@ inventory::ItemData createDefaultDynamicData(const game_items::Storage& gameItem
     return 0;
 }
 
-[[nodiscard]] static std::array<inventory_changer::inventory::Skin::Sticker, 5> generateSouvenirStickers(const inventory_changer::game_items::Lookup& gameItemLookup, WeaponId weaponID, std::uint32_t tournamentID, inventory_changer::TournamentMap map, TournamentTeam team1, TournamentTeam team2, csgo::ProPlayer player) noexcept
-{
-    std::array<inventory_changer::inventory::Skin::Sticker, 5> stickers;
+template <typename AttributeGenerator>
+class DropGenerator {
+public:
+    explicit DropGenerator(const game_items::Lookup& gameItemLookup, AttributeGenerator attributeGenerator)
+        : gameItemLookup{ gameItemLookup }, attributeGenerator{ attributeGenerator } {}
 
-    stickers[0].stickerID = gameItemLookup.findTournamentEventStickerID(tournamentID);
-
-    if (tournamentID != 1) {
-        stickers[1].stickerID = gameItemLookup.findTournamentTeamGoldStickerID(tournamentID, team1);
-        stickers[2].stickerID = gameItemLookup.findTournamentTeamGoldStickerID(tournamentID, team2);
-
-        if (player)
-            stickers[3].stickerID = gameItemLookup.findTournamentPlayerGoldStickerID(tournamentID, static_cast<int>(player));
-        else if (tournamentID >= 18) // starting with PGL Stockholm 2021
-            stickers[3].stickerID = inventory_changer::game_integration::getTournamentMapGoldStickerID(map);
+    [[nodiscard]] inventory::ItemData generateItemData(const game_items::Item& unlockedItem, const inventory::Item& caseItem, bool willProduceStatTrak) const
+    {
+        if (willProduceStatTrak && unlockedItem.isMusic()) {
+            return inventory::Music{ .statTrak = 0 };
+        } else if (unlockedItem.isSkin()) {
+            return generateSkin(unlockedItem, caseItem);
+        } else if (unlockedItem.isGloves()) {
+            return generateGloves(unlockedItem);
+        }
+        return {};
     }
 
-    std::mt19937 gen{ std::random_device{}() };
-    std::shuffle(stickers.begin(), stickers.begin() + getNumberOfSupportedStickerSlots(weaponID), gen);
+private:
+    [[nodiscard]] inventory::Skin generateSkin(const game_items::Item& unlockedItem, const inventory::Item& caseItem) const
+    {
+        inventory::Skin skin;
+        const auto& paintKit = gameItemLookup.getStorage().getPaintKit(unlockedItem);
+        skin.wear = std::lerp(paintKit.wearRemapMin, paintKit.wearRemapMax, attributeGenerator.generatePaintKitWear(attributeGenerator.generatePaintKitCondition()));
+        skin.seed = attributeGenerator.generatePaintKitSeed();
 
-    return stickers;
+        if (const auto souvenirPackage = caseItem.get<inventory::SouvenirPackage>()) {
+            skin.tournamentID = gameItemLookup.getStorage().getTournamentEventID(caseItem.gameItem());
+            skin.tournamentStage = souvenirPackage->tournamentStage;
+            skin.tournamentTeam1 = souvenirPackage->tournamentTeam1;
+            skin.tournamentTeam2 = souvenirPackage->tournamentTeam2;
+            skin.proPlayer = souvenirPackage->proPlayer;
+            skin.stickers = generateSouvenirStickers(unlockedItem.getWeaponID(), gameItemLookup.getStorage().getTournamentEventID(caseItem.gameItem()), gameItemLookup.getStorage().getTournamentMap(caseItem.gameItem()), skin.tournamentTeam1, skin.tournamentTeam2, skin.proPlayer);
+        } else if (attributeGenerator.generateStatTrak()) {
+            skin.statTrak = 0;
+        }
+
+        return skin;
+    }
+
+    [[nodiscard]] inventory::SkinStickers generateSouvenirStickers(WeaponId weaponID, std::uint32_t tournamentID, TournamentMap map, TournamentTeam team1, TournamentTeam team2, csgo::ProPlayer player) const
+    {
+        inventory::SkinStickers stickers;
+
+        stickers[0].stickerID = gameItemLookup.findTournamentEventStickerID(tournamentID);
+
+        if (tournamentID != 1) {
+            stickers[1].stickerID = gameItemLookup.findTournamentTeamGoldStickerID(tournamentID, team1);
+            stickers[2].stickerID = gameItemLookup.findTournamentTeamGoldStickerID(tournamentID, team2);
+
+            if (player)
+                stickers[3].stickerID = gameItemLookup.findTournamentPlayerGoldStickerID(tournamentID, static_cast<int>(player));
+            else if (tournamentID >= 18) // starting with PGL Stockholm 2021
+                stickers[3].stickerID = game_integration::getTournamentMapGoldStickerID(map);
+        }
+
+        attributeGenerator.shuffleStickers(getNumberOfSupportedStickerSlots(weaponID), stickers);
+        return stickers;
+    }
+
+    [[nodiscard]] inventory::Gloves generateGloves(const game_items::Item& unlockedItem) const
+    {
+        const auto& paintKit = gameItemLookup.getStorage().getPaintKit(unlockedItem);
+
+        return inventory::Gloves{
+            .wear = std::lerp(paintKit.wearRemapMin, paintKit.wearRemapMax, attributeGenerator.generatePaintKitWear(attributeGenerator.generatePaintKitCondition())),
+            .seed = attributeGenerator.generatePaintKitSeed()
+        };
+    }
+
+    const game_items::Lookup& gameItemLookup;
+    AttributeGenerator attributeGenerator;
+};
+
+std::optional<inventory::Item> generateItemFromContainer(const game_items::Lookup& gameItemLookup, const game_items::CrateLootLookup& crateLootLookup, const inventory::Item& caseItem) noexcept
+{
+    assert(caseItem.gameItem().isCrate());
+
+    const auto crateSeries = gameItemLookup.getStorage().getCrateSeries(caseItem.gameItem());
+    const auto lootList = crateLootLookup.findLootList(crateSeries);
+    if (!lootList)
+        return std::nullopt;
+
+    const auto& unlockedItem = getRandomItemIndexFromContainer(gameItemLookup, crateLootLookup, caseItem.gameItem().getWeaponID(), *lootList);
+    Helpers::RandomGenerator randomGenerator{};
+    return inventory::Item{ unlockedItem, DropGenerator{ gameItemLookup, AttributeGenerator{ randomGenerator } }.generateItemData(unlockedItem, caseItem, lootList->willProduceStatTrak) };
+}
+
+inventory::ItemData createDefaultDynamicData(const game_items::Storage& gameItemStorage, const game_items::Item& item) noexcept
+{
+    Helpers::RandomGenerator randomGenerator{};
+    return DefaultGenerator{ gameItemStorage, AttributeGenerator{ randomGenerator } }.createItemData(item);
+}
+
 }

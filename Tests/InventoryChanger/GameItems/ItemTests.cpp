@@ -89,8 +89,8 @@ TEST_P(TypeTest, CreatedItemIsAgent) {
     ASSERT_EQ(createItemOfType(GetParam()).isAgent(), GetParam() == Item::Type::Agent);
 }
 
-TEST_P(TypeTest, CreatedItemIsCase) {
-    ASSERT_EQ(createItemOfType(GetParam()).isCase(), GetParam() == Item::Type::Case);
+TEST_P(TypeTest, CreatedItemIsCrate) {
+    ASSERT_EQ(createItemOfType(GetParam()).isCrate(), GetParam() == Item::Type::Crate);
 }
 
 TEST_P(TypeTest, CreatedItemIsCaseKey) {
@@ -132,7 +132,7 @@ INSTANTIATE_TEST_SUITE_P(GameItemTest, TypeTest,
         Item::Type::Collectible,
         Item::Type::NameTag,
         Item::Type::Agent,
-        Item::Type::Case,
+        Item::Type::Crate,
         Item::Type::CaseKey,
         Item::Type::OperationPass,
         Item::Type::StatTrakSwapTool,

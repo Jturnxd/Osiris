@@ -4,6 +4,8 @@
 #include <cstdint>
 #include <string>
 
+#include <SDK/Constants/ProPlayer.h>
+#include <SDK/Constants/TournamentTeam.h>
 #include <SDK/ItemSchema.h>
 
 namespace inventory_changer::inventory
@@ -29,6 +31,8 @@ struct Skin {
     [[nodiscard]] bool isSouvenir() const noexcept { return tournamentID != 0; }
 };
 
+using SkinStickers = decltype(Skin::stickers);
+
 struct Agent {
     struct Patch {
         int patchID = 0;
@@ -37,7 +41,7 @@ struct Agent {
     std::array<Patch, 5> patches;
 };
 
-struct Glove {
+struct Gloves {
     float wear = 0.0f;
     int seed = 1;
 };
