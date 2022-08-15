@@ -7,6 +7,7 @@
 #include <InventoryChanger/Inventory/Item.h>
 #include <InventoryChanger/Inventory/Structs.h>
 
+#include <SDK/Constants/Tournament.h>
 #include <SDK/ItemSchema.h>
 
 namespace inventory_changer::item_generator
@@ -25,7 +26,7 @@ public:
     explicit DropGenerator(const game_items::Lookup& gameItemLookup, AttributeGenerator attributeGenerator)
         : gameItemLookup{ gameItemLookup }, attributeGenerator{ attributeGenerator } {}
 
-    [[nodiscard]] inventory::ItemData generateItemData(const game_items::Item& unlockedItem, const inventory::Item& caseItem, bool willProduceStatTrak) const
+    [[nodiscard]] inventory::Item::VariantProperties generateItemData(const game_items::Item& unlockedItem, const inventory::Item& caseItem, bool willProduceStatTrak) const
     {
         if (willProduceStatTrak && unlockedItem.isMusic()) {
             return inventory::Music{ .statTrak = 0 };
@@ -59,19 +60,19 @@ private:
         return skin;
     }
 
-    [[nodiscard]] inventory::SkinStickers generateSouvenirStickers(WeaponId weaponID, std::uint32_t tournamentID, TournamentMap map, TournamentTeam team1, TournamentTeam team2, csgo::ProPlayer player) const
+    [[nodiscard]] inventory::SkinStickers generateSouvenirStickers(WeaponId weaponID, csgo::Tournament tournament, TournamentMap map, csgo::TournamentTeam team1, csgo::TournamentTeam team2, csgo::ProPlayer player) const
     {
         inventory::SkinStickers stickers;
 
-        stickers[0].stickerID = gameItemLookup.findTournamentEventStickerID(tournamentID);
+        stickers[0].stickerID = gameItemLookup.findTournamentEventStickerID(tournament);
 
-        if (tournamentID != 1) {
-            stickers[1].stickerID = gameItemLookup.findTournamentTeamGoldStickerID(tournamentID, team1);
-            stickers[2].stickerID = gameItemLookup.findTournamentTeamGoldStickerID(tournamentID, team2);
+        if (tournament >= csgo::Tournament::EmsOneKatowice2014) {
+            stickers[1].stickerID = gameItemLookup.findTournamentTeamGoldStickerID(tournament, team1);
+            stickers[2].stickerID = gameItemLookup.findTournamentTeamGoldStickerID(tournament, team2);
 
             if (player)
-                stickers[3].stickerID = gameItemLookup.findTournamentPlayerGoldStickerID(tournamentID, static_cast<int>(player));
-            else if (tournamentID >= 18) // starting with PGL Stockholm 2021
+                stickers[3].stickerID = gameItemLookup.findTournamentPlayerGoldStickerID(tournament, static_cast<int>(player));
+            else if (tournament >= csgo::Tournament::PglStockholm2021)
                 stickers[3].stickerID = game_integration::getTournamentMapGoldStickerID(map);
         }
 

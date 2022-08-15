@@ -831,7 +831,7 @@ namespace inventory_changer::item_generator
     if (const auto rarity = getRandomRarity(rarities); rarity != EconRarity::Default) {
         if (rarity == EconRarity::Gold) {
             const auto& randomRareSpecialItem = rareSpecialItems[Helpers::random<std::size_t>(0u, rareSpecialItems.size() - 1u)];
-            if (const auto item = lookup.findItem(randomRareSpecialItem.weaponID, randomRareSpecialItem.paintKit); item.has_value())
+            if (const auto item = lookup.findItem(randomRareSpecialItem.weaponID, randomRareSpecialItem.paintKit))
                 return *item;
         } else {
             const auto loot = game_items::getLootOfRarity(crateLootLookup, lootList.crateSeries, rarity);
@@ -875,7 +875,7 @@ std::optional<inventory::Item> generateItemFromContainer(const game_items::Looku
     return inventory::Item{ unlockedItem, DropGenerator{ gameItemLookup, AttributeGenerator{ randomGenerator } }.generateItemData(unlockedItem, caseItem, lootList->willProduceStatTrak) };
 }
 
-inventory::ItemData createDefaultDynamicData(const game_items::Storage& gameItemStorage, const game_items::Item& item) noexcept
+inventory::Item::VariantProperties createDefaultDynamicData(const game_items::Storage& gameItemStorage, const game_items::Item& item) noexcept
 {
     Helpers::RandomGenerator randomGenerator{};
     return DefaultGenerator{ gameItemStorage, AttributeGenerator{ randomGenerator } }.createItemData(item);
