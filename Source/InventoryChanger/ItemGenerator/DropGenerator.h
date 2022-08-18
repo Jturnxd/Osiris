@@ -38,6 +38,13 @@ public:
         return {};
     }
 
+    [[nodiscard]] inventory::Item::CommonProperties createCommonProperties(const inventory::Item* crateKey) const
+    {
+        if (crateKey)
+            return { .tradableAfterDate = crateKey->getProperties().common.tradableAfterDate };
+        return {};
+    }
+
 private:
     [[nodiscard]] inventory::Skin generateSkin(const game_items::Item& unlockedItem, const inventory::Item& caseItem) const
     {
@@ -46,7 +53,7 @@ private:
         skin.wear = std::lerp(paintKit.wearRemapMin, paintKit.wearRemapMax, attributeGenerator.generatePaintKitWear(attributeGenerator.generatePaintKitCondition()));
         skin.seed = attributeGenerator.generatePaintKitSeed();
 
-        if (const auto souvenirPackage = caseItem.get<inventory::SouvenirPackage>()) {
+        if (const auto souvenirPackage = get<inventory::SouvenirPackage>(caseItem)) {
             skin.tournamentID = gameItemLookup.getStorage().getTournamentEventID(caseItem.gameItem());
             skin.tournamentStage = souvenirPackage->tournamentStage;
             skin.tournamentTeam1 = souvenirPackage->tournamentTeam1;

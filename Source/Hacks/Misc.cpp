@@ -742,10 +742,10 @@ void Misc::antiAfkKick(UserCmd* cmd) noexcept
         cmd->buttons |= 1 << 27;
 }
 
-void Misc::fixAnimationLOD(FrameStage stage) noexcept
+void Misc::fixAnimationLOD(csgo::FrameStage stage) noexcept
 {
 #ifdef _WIN32
-    if (miscConfig.fixAnimationLOD && stage == FrameStage::RENDER_START) {
+    if (miscConfig.fixAnimationLOD && stage == csgo::FrameStage::RENDER_START) {
         if (!localPlayer)
             return;
 
@@ -1057,7 +1057,7 @@ void Misc::purchaseList(GameEvent* event) noexcept
     }
 }
 
-void Misc::oppositeHandKnife(FrameStage stage) noexcept
+void Misc::oppositeHandKnife(csgo::FrameStage stage) noexcept
 {
     if (!miscConfig.oppositeHandKnife)
         return;
@@ -1065,13 +1065,13 @@ void Misc::oppositeHandKnife(FrameStage stage) noexcept
     if (!localPlayer)
         return;
 
-    if (stage != FrameStage::RENDER_START && stage != FrameStage::RENDER_END)
+    if (stage != csgo::FrameStage::RENDER_START && stage != csgo::FrameStage::RENDER_END)
         return;
 
     static const auto cl_righthand = interfaces->cvar->findVar("cl_righthand");
     static bool original;
 
-    if (stage == FrameStage::RENDER_START) {
+    if (stage == csgo::FrameStage::RENDER_START) {
         original = cl_righthand->getInt();
 
         if (const auto activeWeapon = localPlayer->getActiveWeapon()) {

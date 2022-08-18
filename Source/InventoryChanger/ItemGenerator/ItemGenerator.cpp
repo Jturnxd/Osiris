@@ -861,7 +861,7 @@ namespace inventory_changer::item_generator
 namespace inventory_changer::item_generator
 {
 
-std::optional<inventory::Item> generateItemFromContainer(const game_items::Lookup& gameItemLookup, const game_items::CrateLootLookup& crateLootLookup, const inventory::Item& caseItem) noexcept
+std::optional<inventory::Item> generateItemFromContainer(const game_items::Lookup& gameItemLookup, const game_items::CrateLootLookup& crateLootLookup, const inventory::Item& caseItem, const inventory::Item* crateKey) noexcept
 {
     assert(caseItem.gameItem().isCrate());
 
@@ -872,13 +872,15 @@ std::optional<inventory::Item> generateItemFromContainer(const game_items::Looku
 
     const auto& unlockedItem = getRandomItemIndexFromContainer(gameItemLookup, crateLootLookup, caseItem.gameItem().getWeaponID(), *lootList);
     Helpers::RandomGenerator randomGenerator{};
-    return inventory::Item{ unlockedItem, DropGenerator{ gameItemLookup, AttributeGenerator{ randomGenerator } }.generateItemData(unlockedItem, caseItem, lootList->willProduceStatTrak) };
+    DropGenerator dropGenerator{ gameItemLookup, AttributeGenerator{ randomGenerator } };
+    return inventory::Item{ unlockedItem, { dropGenerator.createCommonProperties(crateKey), dropGenerator.generateItemData(unlockedItem, caseItem, lootList->willProduceStatTrak) } };
 }
 
-inventory::Item::VariantProperties createDefaultDynamicData(const game_items::Storage& gameItemStorage, const game_items::Item& item) noexcept
+inventory::Item::Properties createDefaultDynamicData(const game_items::Storage& gameItemStorage, const game_items::Item& item) noexcept
 {
     Helpers::RandomGenerator randomGenerator{};
-    return DefaultGenerator{ gameItemStorage, AttributeGenerator{ randomGenerator } }.createItemData(item);
+    DefaultGenerator defaultGenerator{ gameItemStorage, AttributeGenerator{ randomGenerator } };
+    return { defaultGenerator.createCommonProperties(item), defaultGenerator.createVariantProperties(item) };
 }
 
 }

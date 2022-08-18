@@ -293,17 +293,17 @@ static bool FASTCALL_CONV svCheatsGetBool(void* _this) noexcept
     return hooks->svCheats.getOriginal<bool, WIN32_LINUX(13, 16)>()(_this);
 }
 
-static void STDCALL_CONV frameStageNotify(LINUX_ARGS(void* thisptr,) FrameStage stage) noexcept
+static void STDCALL_CONV frameStageNotify(LINUX_ARGS(void* thisptr,) csgo::FrameStage stage) noexcept
 {
     [[maybe_unused]] static auto backtrackInit = (Backtrack::init(), false);
 
     if (interfaces->engine->isConnected() && !interfaces->engine->isInGame())
         Misc::changeName(true, nullptr, 0.0f);
 
-    if (stage == FrameStage::START)
+    if (stage == csgo::FrameStage::START)
         GameData::update();
 
-    if (stage == FrameStage::RENDER_START) {
+    if (stage == csgo::FrameStage::RENDER_START) {
         Misc::preserveKillfeed();
         Misc::disablePanoramablur();
         Visuals::colorWorld();
@@ -513,15 +513,15 @@ static void STDCALL_CONV soUpdated(LINUX_ARGS(void* thisptr, ) SOID owner, Share
     hooks->inventory.callOriginal<void, 1>(owner, object, event);
 }
 
-static bool STDCALL_CONV dispatchUserMessage(LINUX_ARGS(void* thisptr, ) UserMessageType type, int passthroughFlags, int size, const void* data) noexcept
+static bool STDCALL_CONV dispatchUserMessage(LINUX_ARGS(void* thisptr, ) csgo::UserMessageType type, int passthroughFlags, int size, const void* data) noexcept
 {
-    if (type == UserMessageType::Text)
+    if (type == csgo::UserMessageType::Text)
         inventory_changer::InventoryChanger::instance().onUserTextMsg(data, size);
-    else if (type == UserMessageType::VoteStart)
+    else if (type == csgo::UserMessageType::VoteStart)
         Misc::onVoteStart(data, size);
-    else if (type == UserMessageType::VotePass)
+    else if (type == csgo::UserMessageType::VotePass)
         Misc::onVotePass();
-    else if (type == UserMessageType::VoteFailed)
+    else if (type == csgo::UserMessageType::VoteFailed)
         Misc::onVoteFailed();
 
     return hooks->client.callOriginal<bool, 38>(type, passthroughFlags, size, data);

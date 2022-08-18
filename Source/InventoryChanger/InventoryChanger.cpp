@@ -337,7 +337,7 @@ static void applyPlayerAgent() noexcept
     if (!model)
         return;
 
-    if (const auto agent = item->get<inventory_changer::inventory::Agent>()) {
+    if (const auto agent = get<inventory_changer::inventory::Agent>(*item)) {
         for (std::size_t i = 0; i < agent->patches.size(); ++i) {
             if (const auto& patch = agent->patches[i]; patch.patchID != 0)
                 localPlayer->playerPatchIndices()[i] = patch.patchID;
@@ -405,20 +405,20 @@ static void processEquipRequests()
     }
 }
 
-void InventoryChanger::run(FrameStage stage) noexcept
+void InventoryChanger::run(csgo::FrameStage stage) noexcept
 {
     static int localPlayerHandle = -1;
 
     if (localPlayer)
         localPlayerHandle = localPlayer->handle();
 
-    if (stage == FrameStage::NET_UPDATE_POSTDATAUPDATE_START) {
+    if (stage == csgo::FrameStage::NET_UPDATE_POSTDATAUPDATE_START) {
         onPostDataUpdateStart(localPlayerHandle);
         if (hudUpdateRequired && localPlayer && !localPlayer->isDormant())
             updateHud();
     }
 
-    if (stage != FrameStage::RENDER_START)
+    if (stage != csgo::FrameStage::RENDER_START)
         return;
 
     const auto localInventory = memory->inventoryManager->getLocalInventory();
@@ -1126,7 +1126,7 @@ void InventoryChanger::onRoundMVP(GameEvent& event)
         return;
 
     const auto& item = *optionalItem;
-    const auto music = item->get<inventory_changer::inventory::Music>();
+    const auto music = get<inventory_changer::inventory::Music>(*item);
     if (!music)
         return;
 
@@ -1155,7 +1155,7 @@ void InventoryChanger::updateStatTrak(GameEvent& event)
         return;
 
     const auto item = *optionalItem;
-    const auto skin = item->get<inventory::Skin>();
+    const auto skin = get<inventory::Skin>(*item);
     if (!skin)
         return;
 
@@ -1226,7 +1226,7 @@ void InventoryChanger::getArgAsStringHook(const char* string, std::uintptr_t ret
         const auto groupId = (std::uint16_t)hooks->panoramaMarshallHelper.callOriginal<double, 5>(params, 1);
         const auto pickInGroupIndex = (std::uint8_t)hooks->panoramaMarshallHelper.callOriginal<double, 5>(params, 2);
 
-        memory->panoramaMarshallHelper->setResult(params, static_cast<int>(backend.getPickEm().getPickedTeam({ 19, groupId, pickInGroupIndex })));
+        memory->panoramaMarshallHelper->setResult(params, static_cast<int>(backend.getPickEm().getPickedTeam({ csgo::Tournament::PglAntwerp2022, groupId, pickInGroupIndex })));
     } else if (returnAddress == memory->setInventorySortAndFiltersGetArgAsStringReturnAddress) {
         panoramaCodeInXrayScanner = (std::strcmp(string, "xraymachine") == 0);
     } else if (returnAddress == memory->performItemCasketTransactionGetArgAsStringReturnAddress) {
@@ -1418,7 +1418,7 @@ void InventoryChanger::placePickEmPick(std::uint16_t group, std::uint8_t indexIn
         return;
 
     const auto tournamentTeam = gameItemLookup.getStorage().getStickerKit(*sticker).tournamentTeam;
-    backend.getRequestor().request<backend::request::PickStickerPickEm>(backend::PickEm::PickPosition{ 19, group, indexInGroup }, tournamentTeam);
+    backend.getRequestor().request<backend::request::PickStickerPickEm>(backend::PickEm::PickPosition{ csgo::Tournament::PglAntwerp2022, group, indexInGroup }, tournamentTeam);
 }
 
 }

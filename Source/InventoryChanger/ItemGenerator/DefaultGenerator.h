@@ -1,5 +1,7 @@
 #pragma once
 
+#include <chrono>
+
 #include <InventoryChanger/GameItems/Storage.h>
 #include <InventoryChanger/Inventory/Item.h>
 #include <InventoryChanger/Inventory/Structs.h>
@@ -9,13 +11,13 @@
 namespace inventory_changer::item_generator
 {
 
-template <typename AttributeGenerator>
+template <typename AttributeGenerator, typename SystemClock = std::chrono::system_clock>
 class DefaultGenerator {
 public:
     explicit DefaultGenerator(const game_items::Storage& gameItemStorage, AttributeGenerator attributeGenerator)
         : gameItemStorage{ gameItemStorage }, attributeGenerator{ attributeGenerator } {}
 
-    [[nodiscard]] inventory::Item::VariantProperties createItemData(const game_items::Item& item) const
+    [[nodiscard]] inventory::Item::VariantProperties createVariantProperties(const game_items::Item& item) const
     {
         if (item.isSkin()) {
             return createSkin(item);
@@ -28,6 +30,13 @@ public:
             return createServiceMedal(item);
         }
 
+        return {};
+    }
+
+    [[nodiscard]] inventory::Item::CommonProperties createCommonProperties(const game_items::Item& item) const
+    {
+        if (item.isCaseKey())
+            return { .tradableAfterDate = static_cast<std::uint32_t>(SystemClock::to_time_t(getTradableAfterWeekDate())) };
         return {};
     }
 
@@ -65,6 +74,15 @@ private:
     [[nodiscard]] inventory::SouvenirPackage createSouvenirPackage(const game_items::Item& item) const
     {
         return attributeGenerator.generateSouvenirPackage(gameItemStorage.getTournamentEventID(item), gameItemStorage.getTournamentMap(item));
+    }
+
+    [[nodiscard]] typename SystemClock::time_point getTradableAfterWeekDate() const
+    {
+        using namespace std::chrono;
+        constexpr auto hourWhenItemsBecomeTradable = 7h;
+        constexpr auto tradablePenalty = days{ 7 } + hourWhenItemsBecomeTradable;
+
+        return ceil<days>(SystemClock::now() - hourWhenItemsBecomeTradable) + tradablePenalty;
     }
 
     const game_items::Storage& gameItemStorage;

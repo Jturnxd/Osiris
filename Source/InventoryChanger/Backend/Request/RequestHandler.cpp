@@ -1,3 +1,6 @@
+#include <memory>
+#include <optional>
+
 #include "RequestHandler.h"
 
 #include <InventoryChanger/Backend/BackendSimulator.h>
@@ -9,7 +12,7 @@ namespace inventory_changer::backend
 
 Response RequestHandler::operator()(const request::ApplySticker& request) const
 {
-    const auto skin = constRemover.removeConstness(request.item)->get<inventory::Skin>();
+    const auto skin = get<inventory::Skin>(*constRemover.removeConstness(request.item));
     if (!skin)
         return {};
 
@@ -23,7 +26,7 @@ Response RequestHandler::operator()(const request::ApplySticker& request) const
 
 Response RequestHandler::operator()(const request::WearSticker& request) const
 {
-    const auto skin = constRemover.removeConstness(request.skin)->get<inventory::Skin>();
+    const auto skin = get<inventory::Skin>(*constRemover.removeConstness(request.skin));
     if (!skin)
         return {};
 
@@ -60,12 +63,20 @@ Response RequestHandler::operator()(const request::SwapStatTrak& request) const
     return response::StatTrakSwapped{ *statTrakFrom < *statTrakTo ? request.itemFrom : request.itemTo };
 }
 
+[[nodiscard]] const inventory::Item* toPointer(const std::optional<ItemIterator>& item)
+{
+    if (item.has_value())
+        return std::to_address(*item);
+    else
+        return nullptr;
+}
+
 Response RequestHandler::operator()(const request::OpenContainer& request) const
 {
     if (!request.container->gameItem().isCrate())
         return {};
 
-    auto generatedItem = item_generator::generateItemFromContainer(backend.getGameItemLookup(), backend.getCrateLootLookup(), *request.container);
+    auto generatedItem = item_generator::generateItemFromContainer(backend.getGameItemLookup(), backend.getCrateLootLookup(), *request.container, toPointer(request.key));
     if (!generatedItem.has_value())
         return {};
 
@@ -93,7 +104,7 @@ Response RequestHandler::operator()(const request::ApplyPatch& request) const
 
 Response RequestHandler::operator()(const request::RemovePatch& request) const
 {
-    const auto agent = constRemover.removeConstness(request.item)->get<inventory::Agent>();
+    const auto agent = get<inventory::Agent>(*constRemover.removeConstness(request.item));
     if (!agent)
         return {};
 
@@ -136,7 +147,7 @@ Response RequestHandler::operator()(const request::ActivateViewerPass& request) 
 
 Response RequestHandler::operator()(const request::AddNameTag& request) const
 {
-    const auto skin = constRemover.removeConstness(request.item)->get<inventory::Skin>();
+    const auto skin = get<inventory::Skin>(*constRemover.removeConstness(request.item));
     if (!skin)
         return {};
 
@@ -148,7 +159,7 @@ Response RequestHandler::operator()(const request::AddNameTag& request) const
 
 Response RequestHandler::operator()(const request::RemoveNameTag& request) const
 {
-    if (const auto skin = constRemover.removeConstness(request.item)->get<inventory::Skin>()) {
+    if (const auto skin = get<inventory::Skin>(*constRemover.removeConstness(request.item))) {
         skin->nameTag.clear();
         backend.moveToFront(request.item);
         return response::NameTagRemoved{ request.item };
@@ -236,7 +247,7 @@ Response RequestHandler::operator()(const request::PerformXRayScan& request) con
     if (!request.crate->gameItem().isCrate())
         return {};
 
-    auto generatedItem = item_generator::generateItemFromContainer(backend.getGameItemLookup(), backend.getCrateLootLookup(), *request.crate);
+    auto generatedItem = item_generator::generateItemFromContainer(backend.getGameItemLookup(), backend.getCrateLootLookup(), *request.crate, nullptr);
     if (!generatedItem.has_value())
         return {};
 
@@ -260,8 +271,10 @@ Response RequestHandler::operator()(const request::ClaimXRayScannedItem& request
         return {};
 
     if (request.key.has_value()) {
-        if (const auto& keyItem = *request.key; keyItem->gameItem().isCaseKey())
+        if (const auto& keyItem = *request.key; keyItem->gameItem().isCaseKey()) {
+            constRemover.removeConstness(scannerItems->reward)->getProperties().common.tradableAfterDate = keyItem->getProperties().common.tradableAfterDate;
             backend.removeItem(keyItem);
+        }
     }
 
     backend.removeItem(request.container);
