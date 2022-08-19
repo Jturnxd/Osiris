@@ -8,7 +8,6 @@
 #include "ItemIDMap.h"
 #include "Loadout.h"
 #include "PickEm.h"
-#include "Requestor.h"
 #include "StorageUnitManager.h"
 #include "XRayScanner.h"
 #include "Request/RequestHandler.h"
@@ -130,7 +129,7 @@ public:
         });
 
         if (removedFromStorageUnit.has_value()) {
-            getRequestor().request<request::RemoveFromStorageUnit>(it, *removedFromStorageUnit);
+            getRequestHandler()(request::RemoveFromStorageUnit{ it, *removedFromStorageUnit });
         }
 
         return removeItemInternal(it);
@@ -152,11 +151,9 @@ public:
         return itemIDMap.getItemID(it);
     }
 
-    using RequestorType = Requestor<RequestHandler, ResponseQueue<>>;
-
-    [[nodiscard]] RequestorType getRequestor()
+    [[nodiscard]] RequestHandler getRequestHandler()
     {
-        return Requestor{ RequestHandler{ *this, pickEm, storageUnitManager, xRayScanner, ItemConstRemover{ inventory } }, responseQueue };
+        return RequestHandler{ *this, pickEm, storageUnitManager, xRayScanner, responseQueue, ItemConstRemover{ inventory } };
     }
 
     template <typename GameInventory>
