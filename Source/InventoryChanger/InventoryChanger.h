@@ -6,6 +6,8 @@
 
 #include "Backend/BackendSimulator.h"
 #include "Backend/Request/RequestBuilder.h"
+#include "Backend/Request/ItemActivationHandler.h"
+#include "Backend/Request/XRayScannerHandler.h"
 #include "GameItems/Lookup.h"
 #include "GameItems/CrateLootLookup.h"
 
@@ -21,7 +23,7 @@ namespace inventory_changer
 class InventoryChanger {
 public:
     InventoryChanger(game_items::Lookup gameItemLookup, game_items::CrateLootLookup crateLootLookup)
-        : gameItemLookup{ std::move(gameItemLookup) }, crateLootLookup{ std::move(crateLootLookup) }, backend{ this->gameItemLookup, this->crateLootLookup }, backendRequestBuilder{ backend.getItemIDMap(), backend.getRequestHandler() } {}
+        : gameItemLookup{ std::move(gameItemLookup) }, crateLootLookup{ std::move(crateLootLookup) }, backend{ this->gameItemLookup, this->crateLootLookup } {}
 
     static InventoryChanger& instance();
 
@@ -59,13 +61,20 @@ public:
 
     void reset();
 
+    void drawGUI(bool contentOnly);
+
 private:
     void placePickEmPick(std::uint16_t group, std::uint8_t indexInGroup, int stickerID);
+
+    [[nodiscard]] auto getRequestBuilder()
+    {
+        return backend::RequestBuilder{ requestBuilderParams, backend.getItemIDMap(), backend.getRequestHandler(), backend.getStorageUnitHandler(), backend.getXRayScannerHandler(), backend.getItemActivationHandler() };
+    }
 
     game_items::Lookup gameItemLookup;
     game_items::CrateLootLookup crateLootLookup;
     backend::BackendSimulator backend;
-    backend::RequestBuilder<backend::RequestHandler> backendRequestBuilder;
+    backend::RequestBuilderParams requestBuilderParams;
     bool panoramaCodeInXrayScanner = false;
     std::vector<char> userTextMsgBuffer;
 };
@@ -77,7 +86,6 @@ namespace InventoryChanger
     // GUI
     void menuBarItem() noexcept;
     void tabItem() noexcept;
-    void drawGUI(bool contentOnly) noexcept;
 
     void run(csgo::FrameStage) noexcept;
     void scheduleHudUpdate() noexcept;

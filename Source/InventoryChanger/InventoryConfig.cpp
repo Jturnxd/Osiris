@@ -195,7 +195,7 @@ void pickEmFromJson(const json& j, inventory_changer::backend::BackendSimulator&
         if (team == csgo::TournamentTeam::None)
             continue;
 
-        backend.getRequestHandler()(inventory_changer::backend::request::PickStickerPickEm{ *position, team });
+        backend.getPickEmHandler().pickSticker(*position, team);
     }
 
 }
@@ -407,7 +407,7 @@ void inventory_changer::fromJson(const json& j, InventoryChanger& inventoryChang
         if (!item)
             continue;
 
-        const auto itemAdded = backend.addItemAcknowledged(inventory::Item{ *item, { commonPropertiesFromJson(jsonItem), itemFromJson(lookup.getStorage(), *item, jsonItem) } });
+        const auto itemAdded = backend.getInventoryHandler().addItem(inventory::Item{ *item, { commonPropertiesFromJson(jsonItem), itemFromJson(lookup.getStorage(), *item, jsonItem) } }, false);
 
         if (const auto storageUnitID = storageUnitIdFromJson(jsonItem); storageUnitID.has_value()) {
             if (!item->isStorageUnit()) {
@@ -420,18 +420,18 @@ void inventory_changer::fromJson(const json& j, InventoryChanger& inventoryChang
         if (const auto equippedSlot = equippedSlotFromJson(jsonItem); equippedSlot != static_cast<std::uint8_t>(-1)) {
             const auto equippedState = equippedFromJson(jsonItem);
             if (equippedState.ct)
-                backend.equipItemCT(itemAdded, equippedSlot);
+                backend.getLoadoutHandler().equipItem(itemAdded, equippedSlot, Team::CT);
             if (equippedState.tt)
-                backend.equipItemTT(itemAdded, equippedSlot);
+                backend.getLoadoutHandler().equipItem(itemAdded, equippedSlot, Team::TT);
             if (equippedState.noTeam)
-                backend.equipItemNoTeam(itemAdded, equippedSlot);
+                backend.getLoadoutHandler().equipItem(itemAdded, equippedSlot, Team::None);
         }
 
     }
 
     for (auto [item, storageUnitID] : itemsToBindToStorageUnits) {
         if (const auto storageUnit = storageUnits.find(storageUnitID); storageUnit != storageUnits.end()) {
-            backend.getRequestHandler()(inventory_changer::backend::request::BindItemToStorageUnit{ item, storageUnit->second });
+            backend.getStorageUnitHandler().bindItemToStorageUnit(item, storageUnit->second);
         }
     }
 }

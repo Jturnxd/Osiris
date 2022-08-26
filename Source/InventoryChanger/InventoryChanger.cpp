@@ -466,7 +466,7 @@ void InventoryChanger::menuBarItem() noexcept
 void InventoryChanger::tabItem() noexcept
 {
     if (ImGui::BeginTabItem("Inventory Changer")) {
-        drawGUI(true);
+        inventory_changer::InventoryChanger::instance().drawGUI(true);
         ImGui::EndTabItem();
     }
 }
@@ -721,9 +721,7 @@ private:
     const WeaponNames& weaponNames;
 };
 
-}
-
-void InventoryChanger::drawGUI(bool contentOnly) noexcept
+void InventoryChanger::drawGUI(bool contentOnly)
 {
     if (!contentOnly) {
         if (!windowOpen)
@@ -745,7 +743,7 @@ void InventoryChanger::drawGUI(bool contentOnly) noexcept
     if (!isInAddMode) {
         ImGui::SameLine();
         if (ImGui::Button("Force Update"))
-            InventoryChanger::scheduleHudUpdate();
+            ::InventoryChanger::scheduleHudUpdate();
     }
 
     constexpr auto rarityColor = [](EconRarity rarity) noexcept {
@@ -781,12 +779,12 @@ void InventoryChanger::drawGUI(bool contentOnly) noexcept
             return true;
         };
 
-        static SortFilter gameItemList{ inventory_changer::InventoryChanger::instance().getGameItemLookup().getStorage().getItems() };
+        static SortFilter gameItemList{ gameItemLookup.getStorage().getItems() };
 
         if (filterChanged) {
             const std::wstring filterWide{ Helpers::ToUpperConverter{}.toUpper(Helpers::toWideString(filter)) };
 
-            gameItemList.filter([&passesFilter, &filterWide, &weaponNames = inventory_changer::WeaponNames::instance(), &gameItemStorage = inventory_changer::InventoryChanger::instance().getGameItemLookup().getStorage()](const inventory_changer::game_items::Item& item) {
+            gameItemList.filter([&passesFilter, &filterWide, &weaponNames = inventory_changer::WeaponNames::instance(), &gameItemStorage = gameItemLookup.getStorage()](const inventory_changer::game_items::Item& item) {
                 return filterWide.empty() || passesFilter(filterWide, weaponNames.getWeaponNameUpper(item.getWeaponID()), getItemName(gameItemStorage, item).forSearch);
             });
         }
@@ -801,14 +799,14 @@ void InventoryChanger::drawGUI(bool contentOnly) noexcept
 
             for (const auto& [i, gameItem] : gameItemList.getItems()) {
                 if (addingAll) {
-                    inventory_changer::InventoryChanger::instance().getBackend().addItemUnacknowledged(inventory_changer::inventory::Item{ gameItem, inventory_changer::item_generator::createDefaultDynamicData(inventory_changer::InventoryChanger::instance().getGameItemLookup().getStorage(), gameItem) });
+                    backend.getInventoryHandler().addItem(inventory::Item{ gameItem, item_generator::createDefaultDynamicData(gameItemLookup.getStorage(), gameItem) }, true);
                 }
 
                 ImGui::PushID(i);
 
                 if (ImGui::SkinSelectable(gameItem, { 37.0f, 28.0f }, { 200.0f, 150.0f }, rarityColor(gameItem.getRarity()), &toAddCount[i])) {
                     for (int j = 0; j < toAddCount[i]; ++j)
-                        inventory_changer::InventoryChanger::instance().getBackend().addItemUnacknowledged(inventory_changer::inventory::Item{ gameItem, inventory_changer::item_generator::createDefaultDynamicData(inventory_changer::InventoryChanger::instance().getGameItemLookup().getStorage(), gameItem) });
+                        backend.getInventoryHandler().addItem(inventory::Item{ gameItem, item_generator::createDefaultDynamicData(gameItemLookup.getStorage(), gameItem) }, true);
                     toAddCount[i] = 1;
                 }
                 ImGui::PopID();
@@ -817,10 +815,10 @@ void InventoryChanger::drawGUI(bool contentOnly) noexcept
         ImGui::EndChild();
     } else {
         if (ImGui::BeginChild("##scrollarea2", ImVec2{ 0.0f, contentOnly ? 400.0f : 0.0f })) {
-            const auto& inventory = inventory_changer::InventoryChanger::instance().getBackend().getInventory();
+            const auto& inventory = backend.getInventory();
             std::size_t i = 0;
             for (auto it = inventory.rbegin(); it != inventory.rend();) {
-                if (it->getState() != inventory_changer::inventory::Item::State::Default) {
+                if (it->getState() != inventory::Item::State::Default) {
                     ++it;
                     continue;
                 }
@@ -829,7 +827,7 @@ void InventoryChanger::drawGUI(bool contentOnly) noexcept
                 bool shouldDelete = false;
                 ImGui::SkinItem(it->gameItem(), { 37.0f, 28.0f }, { 200.0f, 150.0f }, rarityColor(it->gameItem().getRarity()), shouldDelete);
                 if (shouldDelete) {
-                    it = std::make_reverse_iterator(inventory_changer::InventoryChanger::instance().getBackend().removeItem(std::next(it).base()));
+                    it = std::make_reverse_iterator(backend.getItemRemovalHandler().removeItem(std::next(it).base()));
                 } else {
                     ++it;
                 }
@@ -842,6 +840,8 @@ void InventoryChanger::drawGUI(bool contentOnly) noexcept
 
     if (!contentOnly)
         ImGui::End();
+}
+
 }
 
 void InventoryChanger::onSoUpdated(SharedObject* object) noexcept
@@ -1113,7 +1113,7 @@ InventoryChanger& InventoryChanger::instance()
 void InventoryChanger::getArgAsNumberHook(int number, std::uintptr_t returnAddress)
 {
     if (returnAddress == memory->setStickerToolSlotGetArgAsNumberReturnAddress)
-        backendRequestBuilder.setStickerSlot(static_cast<std::uint8_t>(number));
+        requestBuilderParams.stickerSlot = static_cast<std::uint8_t>(number);
 }
 
 void InventoryChanger::onRoundMVP(GameEvent& event)
@@ -1132,7 +1132,7 @@ void InventoryChanger::onRoundMVP(GameEvent& event)
 
     if (music->statTrak > -1) {
         event.setInt("musickitmvps", music->statTrak + 1);
-        backend.getRequestHandler()(backend::request::UpdateStatTrak{ item, music->statTrak + 1 });
+        backend.getItemModificationHandler().updateStatTrak(item, music->statTrak + 1);
     }
 }
 
@@ -1160,7 +1160,7 @@ void InventoryChanger::updateStatTrak(GameEvent& event)
         return;
 
     if (skin->statTrak > -1)
-        backend.getRequestHandler()(backend::request::UpdateStatTrak{ item, skin->statTrak + 1 });
+        backend.getItemModificationHandler().updateStatTrak(item, skin->statTrak + 1);
 }
 
 void InventoryChanger::overrideHudIcon(GameEvent& event)
@@ -1192,31 +1192,32 @@ void InventoryChanger::getArgAsStringHook(const char* string, std::uintptr_t ret
         const auto toolItemID = stringToUint64(string);
         const auto destItemIdString = hooks->panoramaMarshallHelper.callOriginal<const char*, 7>(params, 1);
         if (destItemIdString)
-            backendRequestBuilder.useToolOn(toolItemID, stringToUint64(destItemIdString));
+            getRequestBuilder().useToolOn(toolItemID, stringToUint64(destItemIdString));
     } else if (returnAddress == memory->wearItemStickerGetArgAsStringReturnAddress) {
         const auto slot = (std::uint8_t)hooks->panoramaMarshallHelper.callOriginal<double, 5>(params, 1);
-        backendRequestBuilder.wearStickerOf(stringToUint64(string), slot);
+        getRequestBuilder().wearStickerOf(stringToUint64(string), slot);
     } else if (returnAddress == memory->setNameToolStringGetArgAsStringReturnAddress) {
-        backendRequestBuilder.setNameTag(string);
+        requestBuilderParams.nameTag = string;
     } else if (returnAddress == memory->clearCustomNameGetArgAsStringReturnAddress) {
-        backendRequestBuilder.removeNameTagFrom(stringToUint64(string));
+        getRequestBuilder().removeNameTagFrom(stringToUint64(string));
     } else if (returnAddress == memory->deleteItemGetArgAsStringReturnAddress) {
         if (const auto itOptional = backend.itemFromID(stringToUint64(string)); itOptional.has_value())
-            backend.removeItem(*itOptional);
+            backend.getItemRemovalHandler().removeItem(*itOptional);
     } else if (returnAddress == memory->acknowledgeNewItemByItemIDGetArgAsStringReturnAddress) {
         acknowledgeItem(stringToUint64(string));
     } else if (returnAddress == memory->setStatTrakSwapToolItemsGetArgAsStringReturnAddress1) {
         const auto swapItem1 = stringToUint64(string);
         const auto swapItem2String = hooks->panoramaMarshallHelper.callOriginal<const char*, 7>(params, 1);
         if (swapItem2String) {
-            backendRequestBuilder.setStatTrakSwapItems(swapItem1, stringToUint64(swapItem2String));
+            requestBuilderParams.statTrakSwapItemID1 = swapItem1;
+            requestBuilderParams.statTrakSwapItemID2 = stringToUint64(swapItem2String);
         }
     } else if (returnAddress == memory->setItemAttributeValueAsyncGetArgAsStringReturnAddress) {
         if (const auto itOptional = backend.itemFromID(stringToUint64(string)); itOptional.has_value() && (*itOptional)->gameItem().isTournamentCoin()) {
             const auto attribute = hooks->panoramaMarshallHelper.callOriginal<const char*, 7>(params, 1);
             if (attribute && std::strcmp(attribute, "sticker slot 0 id") == 0) {
                 const auto graffitiID = (int)hooks->panoramaMarshallHelper.callOriginal<double, 5>(params, 2);
-                backend.getRequestHandler()(backend::request::SelectTeamGraffiti{ *itOptional, static_cast<std::uint16_t>(graffitiID) });
+                backend.getItemModificationHandler().selectTeamGraffiti(*itOptional, static_cast<std::uint16_t>(graffitiID));
             }
         }
     } else if (returnAddress == memory->getMyPredictionTeamIDGetArgAsStringReturnAddress) {
@@ -1234,9 +1235,9 @@ void InventoryChanger::getArgAsStringHook(const char* string, std::uintptr_t ret
         const auto storageUnitItemIdString = hooks->panoramaMarshallHelper.callOriginal<const char*, 7>(params, 1);
 
         if (operation == 1) {
-            backendRequestBuilder.addToStorageUnit(stringToUint64(string), stringToUint64(storageUnitItemIdString));
+            getRequestBuilder().addToStorageUnit(stringToUint64(string), stringToUint64(storageUnitItemIdString));
         } else if (operation == -1) {
-            backendRequestBuilder.removeFromStorageUnit(stringToUint64(string), stringToUint64(storageUnitItemIdString));
+            getRequestBuilder().removeFromStorageUnit(stringToUint64(string), stringToUint64(storageUnitItemIdString));
         }
     }
 }
@@ -1355,14 +1356,7 @@ void InventoryChanger::onItemEquip(Team team, int slot, std::uint64_t& itemID)
         const auto& itemIterator = *itemOptional;
 
         if (slot != 0xFFFF) {
-            if (team == Team::CT) {
-                backend.markItemEquippedCT(itemIterator, static_cast<backend::Loadout::Slot>(slot));
-            } else if (team == Team::TT) {
-                backend.markItemEquippedTT(itemIterator, static_cast<backend::Loadout::Slot>(slot));
-            } else if (team == Team::None) {
-                backend.markItemEquippedNoTeam(itemIterator, static_cast<backend::Loadout::Slot>(slot));
-            }
-
+            backend.getLoadoutHandler().markItemEquipped(itemIterator, static_cast<backend::Loadout::Slot>(slot), team);
             equipRequests.push_back({ std::chrono::steady_clock::now(), itemID, itemIterator->gameItem().getWeaponID() });
         } else {
             // unequip
@@ -1405,8 +1399,8 @@ void InventoryChanger::fixKnifeAnimation(Entity* viewModelWeapon, long& sequence
 
 void InventoryChanger::reset()
 {
-    backend.clearInventory();
-    backend.clearPickEm();
+    clearInventory(backend);
+    backend.getPickEmHandler().clearPicks();
     static inventory_changer::game_integration::Inventory gameInventory{};
     backend.run(gameInventory, std::chrono::milliseconds{ 0 });
 }
@@ -1418,7 +1412,7 @@ void InventoryChanger::placePickEmPick(std::uint16_t group, std::uint8_t indexIn
         return;
 
     const auto tournamentTeam = gameItemLookup.getStorage().getStickerKit(*sticker).tournamentTeam;
-    backend.getRequestHandler()(backend::request::PickStickerPickEm{ backend::PickEm::PickPosition{ csgo::Tournament::PglAntwerp2022, group, indexInGroup }, tournamentTeam });
+    backend.getPickEmHandler().pickSticker(backend::PickEm::PickPosition{ csgo::Tournament::PglAntwerp2022, group, indexInGroup }, tournamentTeam);
 }
 
 }
