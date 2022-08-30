@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cassert>
 #include <cstdint>
 #include <optional>
 #include <unordered_map>
@@ -11,13 +12,16 @@ namespace inventory_changer::backend
 
 class StorageUnitManager {
 public:
-    void addItemToStorageUnit(ItemIterator item, ItemIterator storageUnit)
+    bool addItemToStorageUnit(ItemIterator item, ItemIterator storageUnit)
     {
-        itemsStorageUnits[item] = storageUnit;
+        assert(!item->gameItem().isStorageUnit() && storageUnit->gameItem().isStorageUnit());
+        return itemsStorageUnits.try_emplace(item, storageUnit).second;
     }
 
     bool removeItemFromStorageUnit(ItemIterator item, ItemIterator storageUnit)
-    { 
+    {
+        assert(!item->gameItem().isStorageUnit() && storageUnit->gameItem().isStorageUnit());
+
         if (const auto it = itemsStorageUnits.find(item); it != itemsStorageUnits.end() && it->second == storageUnit) {
             itemsStorageUnits.erase(it);
             return true;
@@ -46,6 +50,8 @@ public:
     template <typename Function>
     void forEachItemInStorageUnit(ItemIterator storageUnit, Function function) const
     {
+        assert(storageUnit->gameItem().isStorageUnit());
+
         for (const auto& [item, storageUnitContainingItem] : itemsStorageUnits) {
             if (storageUnitContainingItem == storageUnit)
                 function(item);
