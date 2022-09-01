@@ -38,7 +38,7 @@ protected:
     }
 
     template <std::size_t N>
-    [[nodiscard]] StorageUnitWithItems<N> createStorageUnitWithItems()
+    StorageUnitWithItems<N> createStorageUnitWithItems()
     {
         StorageUnitWithItems<N> storageUnitWithItems;
         storageUnitWithItems.storageUnit = createDummyStorageUnit();
@@ -122,6 +122,21 @@ TEST_F(InventoryChanger_Backend_StorageUnitManagerTest, ItemCanBeRemovedFromStor
     EXPECT_TRUE(storageUnitManager.removeItemFromStorageUnit(item, storageUnit));
 }
 
+TEST_F(InventoryChanger_Backend_StorageUnitManagerTest, TryingToRemoveStorageUnitFromAnyStorageUnitResultsInDebugAssertion) {
+    EXPECT_DEBUG_DEATH(storageUnitManager.removeItemFromStorageUnit(createDummyStorageUnit()), "");
+}
+
+TEST_F(InventoryChanger_Backend_StorageUnitManagerTest, ItemIsNotRemovedIfNotInAnyStorageUnit) {
+    EXPECT_EQ(storageUnitManager.removeItemFromStorageUnit(createDummyItem()), std::nullopt);
+}
+
+TEST_F(InventoryChanger_Backend_StorageUnitManagerTest, StorageUnitWhichContainedTheItemIsReturnedWhenRemovingTheItem) {
+    const auto item = createDummyItem();
+    const auto storageUnit = createDummyStorageUnit();
+    storageUnitManager.addItemToStorageUnit(item, storageUnit);
+    EXPECT_EQ(storageUnitManager.removeItemFromStorageUnit(item), storageUnit);
+}
+
 struct StorageUnitIdProjection {
     explicit StorageUnitIdProjection(const std::unordered_map<ItemIterator, std::uint32_t>& storageUnitIDs)
         : storageUnitIDs{ storageUnitIDs } {}
@@ -157,6 +172,51 @@ TEST_F(InventoryChanger_Backend_StorageUnitManager_StorageUnitIDsTest, ItemsFrom
 
 TEST_F(InventoryChanger_Backend_StorageUnitManager_StorageUnitIDsTest, ItemsHaveSameIdAsTheirStorageUnit) {
     EXPECT_EQ(getID(storageUnitItems[0].storageUnit), getID(storageUnitItems[0].items[0]));
+}
+
+TEST_F(InventoryChanger_Backend_StorageUnitManagerTest, TryingToIterateNotOverStorageUnitResultsInDebugAssertion) {
+    EXPECT_DEBUG_DEATH(storageUnitManager.forEachItemInStorageUnit(createDummyItem(), [](ItemIterator){}), "");
+}
+
+struct MockForEachItemFunctor {
+    MOCK_METHOD(void, call, (ItemIterator item));
+
+    void operator()(ItemIterator item)
+    {
+        call(item);
+    }
+};
+
+TEST_F(InventoryChanger_Backend_StorageUnitManagerTest, ForEachFunctorIsNotCalledWhenThereAreNoItemsInTheStorageUnit) {
+    createStorageUnitWithItems<10>();
+
+    testing::StrictMock<MockForEachItemFunctor> mockFunctor;
+    EXPECT_CALL(mockFunctor, call(testing::_)).Times(0);
+    storageUnitManager.forEachItemInStorageUnit(createDummyStorageUnit(), std::ref(mockFunctor));
+}
+
+TEST_F(InventoryChanger_Backend_StorageUnitManagerTest, ForEachFunctorIsCalledOnlyForItemsInTheStorageUnit) {
+    createStorageUnitWithItems<5>();
+    const auto storageUnitWithItems = createStorageUnitWithItems<2>();
+    createStorageUnitWithItems<5>();
+
+    testing::StrictMock<MockForEachItemFunctor> mockFunctor;
+    EXPECT_CALL(mockFunctor, call(storageUnitWithItems.items[0]));
+    EXPECT_CALL(mockFunctor, call(storageUnitWithItems.items[1]));
+
+    storageUnitManager.forEachItemInStorageUnit(storageUnitWithItems.storageUnit, std::ref(mockFunctor));
+}
+
+TEST_F(InventoryChanger_Backend_StorageUnitManagerTest, ForEachFunctorIsNotCalledOnItemsRemovedFromTheStorageUnit) {
+    const auto storageUnitWithItems = createStorageUnitWithItems<3>();
+
+    storageUnitManager.removeItemFromStorageUnit(storageUnitWithItems.items[0], storageUnitWithItems.storageUnit);
+    storageUnitManager.removeItemFromStorageUnit(storageUnitWithItems.items[1]);
+
+    testing::StrictMock<MockForEachItemFunctor> mockFunctor;
+    EXPECT_CALL(mockFunctor, call(storageUnitWithItems.items[2]));
+
+    storageUnitManager.forEachItemInStorageUnit(storageUnitWithItems.storageUnit, std::ref(mockFunctor));
 }
 
 }
